@@ -2,3 +2,4 @@
 *.swp
 build*/
 a.gdb
+.syntastic_cpp_config_file
