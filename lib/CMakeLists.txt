@@ -1,21 +1,9 @@
-set(SRC
-	prob/poisson_solver.cpp
-	slae/csrmat.cpp
-	slae/matrix_solver.cpp
-	grid/regular_grid.cpp
-	grid/regular_grid_boundary.cpp
-	appr/spatial_approximator.cpp
-	appr/fdm_approximator.cpp
-)
+file(GLOB_RECURSE _source_list *.cpp *.hpp)
+foreach(_source IN ITEMS ${_source_list})
+    get_filename_component(_source_path "${_source}" PATH)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/lib" "" _group_path "${_source_path}")
+    string(REPLACE "/" "\\" _group_path "${_group_path}")
+    source_group("${_group_path}" FILES "${_source}")
+endforeach()
 
-set(HEADERS 
-	common.hpp
-	geom.hpp
-	prob/poisson_solver.hpp
-	grid/regular_grid.hpp
-	grid/regular_grid_boundary.hpp
-	appr/spatial_approximator.hpp
-	appr/fdm_approximator.hpp
-)
-
-add_library(${CFDLIB_TARGET} STATIC ${SRC} ${HEADERS})
+add_library(${CFDLIB_TARGET} STATIC ${_source_list})

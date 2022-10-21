@@ -192,7 +192,60 @@ CsrStencil FdmApproximator::_build_stencil() const{
 	return CsrStencil::build(ij);
 }
 
-void FdmApproximator::vtk_save_scalar(std::string filepath, const std::vector<double>& scalar, std::string datacap) const{
+std::vector<double> FdmApproximator::transport(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const{
+	_THROW_NOT_IMP_;
+}
+
+std::vector<double> FdmApproximator::transport_upwind(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const{
+	const CsrStencil& s = stencil();
+	int nx = _grid->nx();
+	int nxy = _grid->nx() * _grid->ny();
+
+	std::vector<double> ret(s.n_nonzero(), 0);
+
+	for (int iz=0; iz<_grid->nz(); ++iz)
+	for (int iy=0; iy<_grid->ny(); ++iy)
+	for (int ix=0; ix<_grid->nx(); ++ix){
+		int ipoint = _grid->ijk_to_glob(ix, iy, iz);
+
+		// x direction
+		if (vx[ipoint] > 0 && ix > 0){
+			double v = vx[ipoint]/_grid->hx(ix-1);
+			ret[s.addr_index(ipoint, ipoint)] += v;
+			ret[s.addr_index(ipoint, ipoint-1)] -= v;
+		} else if (vx[ipoint] < 0 && ix < _grid->nx()-1){
+			double v = vx[ipoint]/_grid->hx(ix);
+			ret[s.addr_index(ipoint, ipoint)] -= v;
+			ret[s.addr_index(ipoint, ipoint+1)] += v;
+		}
+	
+		// y direction
+		if (vy[ipoint] > 0 && iy > 0){
+			double v = vy[ipoint]/_grid->hy(iy-1);
+			ret[s.addr_index(ipoint, ipoint)] += v;
+			ret[s.addr_index(ipoint, ipoint-nx)] -= v;
+		} else if (vy[ipoint] < 0 && iy < _grid->ny()-1){
+			double v = vy[ipoint]/_grid->hy(iy);
+			ret[s.addr_index(ipoint, ipoint)] -= v;
+			ret[s.addr_index(ipoint, ipoint+nx)] += v;
+		}
+
+		// z direction
+		if (vz[ipoint] > 0 && iz > 0){
+			double v = vz[ipoint]/_grid->hz(iz-1);
+			ret[s.addr_index(ipoint, ipoint)] += v;
+			ret[s.addr_index(ipoint, ipoint-nxy)] -= v;
+		} else if (vz[ipoint] < 0 && iz < _grid->nz()-1){
+			double v = vz[ipoint]/_grid->hz(iz);
+			ret[s.addr_index(ipoint, ipoint)] -= v;
+			ret[s.addr_index(ipoint, ipoint+nxy)] += v;
+		}
+	}
+
+	return ret;
+}
+
+void FdmApproximator::_vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{
 	std::ofstream ofs(filepath);
 
 	// header
@@ -211,10 +264,12 @@ void FdmApproximator::vtk_save_scalar(std::string filepath, const std::vector<do
 	for (double c: _grid->zcoo()) ofs << c << std::endl;;
 
 	// data
-	ofs << "POINT_DATA " << scalar.size() << std::endl;
-	ofs << "SCALARS " << datacap << " double 1" << std::endl;
-	ofs << "LOOKUP_TABLE default" << std::endl;
-	for (auto v: scalar) ofs << v << std::endl;
+	ofs << "POINT_DATA " << _grid->n_points() << std::endl;
+	for (auto& it: scalars){
+		ofs << "SCALARS " << it.first << " double 1" << std::endl;
+		ofs << "LOOKUP_TABLE default" << std::endl;
+		for (auto v: *it.second) ofs << v << std::endl;
+	}
 
 
 }

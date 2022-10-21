@@ -13,8 +13,8 @@ public:
 	// build grid with constant steps
 	RegularGrid(
 		double len_x, int nx,
-		double len_y, int ny,
-		double len_z, int nz);
+		double len_y=0, int ny=0,
+		double len_z=0, int nz=0);
 
 	// build grid with variable steps
 	RegularGrid(const std::vector<double>& xcoo,

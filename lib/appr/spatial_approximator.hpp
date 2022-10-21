@@ -24,6 +24,10 @@ public:
 	virtual std::vector<double> stiff() const;
 	// returns matrix for Identity operator
 	virtual std::vector<double> mass() const;
+	// returns matrix for Transport operator
+	virtual std::vector<double> transport(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const;
+	// returns matrix for Upwind Transport operator
+	virtual std::vector<double> transport_upwind(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const;
 
 	// =============== boundary conditions
 	virtual void apply_bc_dirichlet_to_stiff_mat(int bnd, std::vector<double>& stiff_mat) const;
@@ -31,7 +35,10 @@ public:
 	                                             std::vector<double>& stiff_vec) const;
 
 	// =============== savers
-	virtual void vtk_save_scalar(std::string filepath, const std::vector<double>& scalar, std::string datacap) const;
+	// save single scalar
+	void vtk_save_scalar(std::string filepath, const std::vector<double>& scalar, std::string datacap) const;
+	// save multiple scalars
+	void vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const;
 protected:
 	virtual CsrStencil _build_stencil() const = 0;
 private:
@@ -39,6 +46,8 @@ private:
 		CsrStencil stencil;
 	};
 	mutable Cache _cache;
+
+	virtual void _vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const = 0;
 };
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef CHECKS_HPP
-#define CHECKS_HPP
+#ifndef PROG_COMMON_HPP
+#define PROG_COMMON_HPP
 
 #include "common.hpp"
 
