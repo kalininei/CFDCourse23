@@ -3,11 +3,23 @@
 
 1.1 Windows, VisualStudio
 -------------------------
-Проверено на Windows 10, Visual Studio 2019
+- установить git
+  https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe
 
 - установить cmake версии выше 3.0
-https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-windows-x86_64.msi
-Нужно, чтобы cmake.exe был в системных путях. Если ставить через msi, он об этом спросит при установке.
+  https://github.com/Kitware/CMake/releases/download/v3.24.2/cmake-3.24.2-windows-x86_64.msi
+  Нужно, чтобы cmake.exe был в системных путях. Если ставить через msi, он об этом спросит при установке.
+
+- создать папку в системе для репозиториев. Например D:/git_repos/
+
+- запустить консоль git bash
+
+- в консоли перейти на созданную папку. Например
+  > cd D:/git_repos
+
+- клонировать репозиторий
+  > git clone https://github.com/kalininei/CFDCourse23
+  В директории (D:/git_repos в примере) появится папка CFDCourse23, которая является корневой папкой проекта
 
 - cоздать папку build в корне проекта
 
@@ -23,7 +35,7 @@ SET CMGenerator="Visual Studio 16 2019"
 SET CMGenerator="Visual Studio 15 2017"
 SET CMGenerator="Visual Studio 14 2015"
 
-- запустить скрипт winbuild64.bat из папки build. Нуже доступ к интернету.
+- запустить скрипт winbuild64.bat из папки build. Нужен доступ к интернету.
   В процессе будет скачано около 200Мб пакетов, поэтому первый запуск может занять время
 
 - После сборки в папке build появится проект VisualStudio cfdapp.sln
