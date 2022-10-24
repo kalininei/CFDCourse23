@@ -18,7 +18,7 @@ void PoissonSolver::initialize(){
 	std::vector<double> diffmat = _approximator->stiff();
 
 	for (auto& it: _bc_dirichlet){
-		_approximator->apply_bc_dirichlet_to_stiff_mat(it.first, diffmat);
+		_approximator->apply_bc_dirichlet_lhs(it.first, diffmat);
 	}
 
 	_slae_solver->set_matrix(_approximator->stencil(), diffmat);
@@ -32,7 +32,7 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 
 	// dirichlet values
 	for (auto& it: _bc_dirichlet){
-		_approximator->apply_bc_dirichlet_to_stiff_vec(it.first, it.second, _slae_rhs);
+		_approximator->apply_bc_dirichlet_rhs(it.first, it.second, _slae_rhs);
 	}
 
 	// solve

@@ -184,3 +184,9 @@ const RegularGridBoundary& RegularGrid::boundary(int ibnd) const{
 		"Boundary " + std::to_string(ibnd) + " not found");
 	return *(fnd->second);
 }
+
+std::vector<int> RegularGrid::btypes() const {
+	std::vector<int> ret;
+	for (auto bit: _boundary) ret.push_back(bit.first);
+	return ret;
+}

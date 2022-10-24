@@ -29,23 +29,57 @@ public:
 	// returns matrix for Upwind Transport operator
 	virtual std::vector<double> transport_upwind(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const;
 
+	// =============== integration
+	const std::vector<double>& load_vector() const;
+	double integrate(const std::vector<double>& v) const;
+	double domain_volume() const;
+
+	// =============== norms
+	virtual double norm_max(const std::vector<double>& v) const;
+	virtual double norm_2(const std::vector<double>& v) const;
+	double rms(const std::vector<double>& v) const;
+	double rms(const std::vector<double>& a, const std::vector<double>& b) const;
+	double rms(const std::vector<double>& a, std::function<double(Point)> b) const;
+
 	// =============== boundary conditions
-	virtual void apply_bc_dirichlet_to_stiff_mat(int bnd, std::vector<double>& stiff_mat) const;
-	virtual void apply_bc_dirichlet_to_stiff_vec(int bnd, std::function<double(Point)> dir_values,
-	                                             std::vector<double>& stiff_vec) const;
+	// get boundary basis indices with respective point coordinates
+	const std::vector<std::pair<int, Point>>& boundary_bases(int ibnd) const;
+
+	// forced dirichlet conditions
+	void apply_bc_dirichlet(
+		int ibnd,
+		std::function<double(Point)> val_func,
+		std::vector<double>& lhs, std::vector<double>& rhs) const;
+	void apply_bc_dirichlet_lhs(int ibnd, std::vector<double>& lhs) const;
+	void apply_bc_dirichlet_rhs(int ibnd, std::function<double(Point)> val_func, std::vector<double>& rhs) const;
+
+	// stiff matrix conditions
+	// du/dn = -q
+	virtual void apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const;
+	// du/dn = -alpha*u + beta
+	virtual void apply_bc_robin_to_stiff(
+		int ibnd,
+		std::function<double(Point)> alpha_func,
+		std::function<double(Point)> beta_func,
+		std::vector<double>& stiff, std::vector<double>& rhs) const;
 
 	// =============== savers
 	// save single scalar
 	void vtk_save_scalar(std::string filepath, const std::vector<double>& scalar, std::string datacap) const;
 	// save multiple scalars
 	void vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const;
-protected:
-	virtual CsrStencil _build_stencil() const = 0;
 private:
 	struct Cache{
 		CsrStencil stencil;
+		std::vector<double> load_vector;
+		double volume = 0;
+		std::map<int, std::vector<std::pair<int, Point>>> boundary_bases;
 	};
 	mutable Cache _cache;
+
+	virtual CsrStencil _build_stencil() const = 0;
+	virtual std::vector<double> _build_load_vector() const = 0;
+	virtual std::map<int, std::vector<std::pair<int, Point>>> _build_boundary_bases() const = 0;
 
 	virtual void _vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const = 0;
 };

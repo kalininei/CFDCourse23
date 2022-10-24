@@ -11,11 +11,11 @@ void ExplicitTransportSolver::set_initial_conditions(std::function<double(Point)
 }
 
 void ExplicitTransportSolver::set_velocity(std::function<Vector(Point)> func){
-	std::vector<double> _vx = _appr->approximate( [&](Point p)->double { return func(p).x; });
-	std::vector<double> _vy = _appr->approximate( [&](Point p)->double { return func(p).y; });
-	std::vector<double> _vz = _appr->approximate( [&](Point p)->double { return func(p).z; });
+	_vx = _appr->approximate( [&](Point p)->double { return func(p).x; });
+	_vy = _appr->approximate( [&](Point p)->double { return func(p).y; });
+	_vz = _appr->approximate( [&](Point p)->double { return func(p).z; });
 
-	_transport_mat = _appr->transport_upwind(_vx, _vy, _vz);
+	_need_reassemble = true;
 }
 
 const std::vector<double>& ExplicitTransportSolver::u() const{
@@ -30,7 +30,14 @@ double ExplicitTransportSolver::_compute_tau(){
 	return _tau;
 }
 
+void ExplicitTransportSolver::_reassemble(){
+	_transport_mat = _appr->transport_upwind(_vx, _vy, _vz);
+	_need_reassemble = false;
+}
+
 void ExplicitTransportSolver::_solve_next_step(double tau){
+	if (_need_reassemble) _reassemble();
+
 	const CsrStencil& s = _appr->stencil();
 	std::swap(_u, _uold);
 

@@ -2,6 +2,7 @@
 #define MONITOR_HPP
 
 #include "common.hpp"
+#include <fstream>
 #include "appr/spatial_approximator.hpp"
 
 class IMonitor{
@@ -111,6 +112,26 @@ public:
 protected:
 	void _initialize_core(double tstart) override;
 	bool _apply(double tcurrent) override;
+};
+
+class FunctionalSaver: public AMonitor_IterGap{
+public:
+	using func_t = std::function<double()>;
+
+	FunctionalSaver(
+		double delta_iter,
+		std::string filename,
+		int start_iter=0);
+
+	void add_fun(std::string caption, func_t);
+protected:
+	std::map<std::string, func_t> _funcs;
+	std::ofstream _ofs;
+	std::string _filename;
+
+	void _initialize_core(double tstart) override;
+	bool _apply(double tcurrent, int cur_iter) override;
+	void finalize(double tend) override;
 };
 
 #endif

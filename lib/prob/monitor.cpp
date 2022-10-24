@@ -63,7 +63,7 @@ void ConsoleIterReport::_initialize_core(double tstart){ }
 bool ConsoleIterReport::_apply(double tcurrent, int cur_iter){
 	std::ostringstream oss;
 
-	oss << "ilay=" << std::setw(5) << cur_iter << ", ";
+	oss << "step=" << std::setw(5) << cur_iter << ", ";
 	oss << "t=" << std::fixed << std::setprecision(3) << tcurrent << " / " << _additional_info();
 
 	std::cout << oss.str() << std::endl;
@@ -181,4 +181,37 @@ bool VtkFieldTimeSaver::_apply(double tcurrent){
 
 void VtkFieldTimeSaver::finalize(double tend){
 	_finalize_saver(tend, _run_calls);
+}
+
+FunctionalSaver::FunctionalSaver(
+		double delta_iter,
+		std::string filename,
+		int start_iter): AMonitor_IterGap(delta_iter, start_iter), _filename(filename){ }
+
+void FunctionalSaver::add_fun(std::string caption, func_t fun){
+	_funcs[caption] = fun;
+}
+
+void FunctionalSaver::_initialize_core(double tstart){
+	_ofs.open(_filename);
+	_ofs << std::setw(16) << "Time step "
+		<< std::setw(16) << "Time ";
+	for (auto& it: _funcs){
+		_ofs << std::setw(16) << it.first << " ";
+	}
+	_ofs << std::endl;
+}
+
+bool FunctionalSaver::_apply(double tcurrent, int cur_iter){
+	_ofs << std::setw(16) << cur_iter << " "
+		<< std::setw(16) << std::scientific << tcurrent;
+	for (auto& it: _funcs){
+		_ofs << std::setw(16) << std::scientific << it.second() << " ";
+	}
+	_ofs << std::endl;
+	return false;
+}
+
+void FunctionalSaver::finalize(double tend){
+	if (_ofs.is_open()) _ofs.close();
 }

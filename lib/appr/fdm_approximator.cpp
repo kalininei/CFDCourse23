@@ -11,6 +11,32 @@ int FdmApproximator::n_bases() const{
 	return _grid->n_points();
 }
 
+std::map<int, std::vector<std::pair<int, Point>>> FdmApproximator::_build_boundary_bases() const{
+	std::map<int, std::vector<std::pair<int, Point>>> ret;
+
+	// sort btypes in reverse order to give higher priority to large btype values
+	std::vector<int> btypes = _grid->btypes();
+	std::sort(btypes.begin(), btypes.end());
+	std::reverse(btypes.begin(), btypes.end());
+
+	// using std::set to prevent doubling of points in different bc faces
+	std::set<int> used_points;
+
+	for (int btype: btypes){
+		std::vector<std::pair<int, Point>>& vec = ret[btype];
+		const RegularGridBoundary& bnd = _grid->boundary(btype);
+		for (int ipoint: bnd.point_indices()){
+			std::pair<std::set<int>::const_iterator, bool> ires = used_points.insert(ipoint);
+			// if point was not used before
+			if (ires.second){
+				vec.push_back({ipoint, _grid->point(ipoint)});
+			}
+		}
+	}
+
+	return ret;
+}
+
 std::vector<double> FdmApproximator::approximate(std::function<double(Point)> func) const{
 	std::vector<double> ret(n_bases());
 
@@ -22,23 +48,6 @@ std::vector<double> FdmApproximator::approximate(std::function<double(Point)> fu
 	}
 
 	return ret;
-}
-
-void FdmApproximator::apply_bc_dirichlet_to_stiff_mat(int ibnd, std::vector<double>& stiff) const{
-	const CsrStencil& s = stencil();
-	const RegularGridBoundary& boundary = _grid->boundary(ibnd);
-
-	for (int bp: boundary.point_indices()){
-		s.set_unit_diagonal(bp, stiff);
-	}
-}
-
-void FdmApproximator::apply_bc_dirichlet_to_stiff_vec(int ibnd, std::function<double(Point)> func, std::vector<double>& vec) const{
-	const RegularGridBoundary& boundary = _grid->boundary(ibnd);
-
-	for (int bp: boundary.point_indices()){
-		vec[bp] = func(_grid->point(bp));
-	}
 }
 
 std::vector<double> FdmApproximator::stiff() const{
@@ -244,6 +253,34 @@ std::vector<double> FdmApproximator::transport_upwind(std::vector<double>& vx, s
 
 	return ret;
 }
+
+std::vector<double> FdmApproximator::_build_load_vector() const{
+	std::vector<double> ret(n_bases(), 0);
+
+	for (int iz=0; iz<_grid->nz(); ++iz)
+	for (int iy=0; iy<_grid->ny(); ++iy)
+	for (int ix=0; ix<_grid->nx(); ++ix){
+		double hx = 0;
+		double hy = 0;
+		double hz = 0;
+
+		if (ix > 0) hx += _grid->hx(ix-1)/2;
+		if (ix < _grid->nx()-1) hx += _grid->hx(ix)/2;
+		if (iy > 0) hy += _grid->hy(iy-1)/2;
+		if (iy < _grid->ny()-1) hy += _grid->hy(iy)/2;
+		if (iz > 0) hz += _grid->hz(iz-1)/2;
+		if (iz < _grid->nz()-1) hz += _grid->hz(iz)/2;
+
+		if (hx == 0) hx = 1;
+		if (hy == 0) hy = 1;
+		if (hz == 0) hz = 1;
+
+		int ipoint = _grid->ijk_to_glob(ix, iy, iz);
+		ret[ipoint] = hx*hy*hz;
+	}
+
+	return ret;
+};
 
 void FdmApproximator::_vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{
 	std::ofstream ofs(filepath);
