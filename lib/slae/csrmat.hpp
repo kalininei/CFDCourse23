@@ -40,6 +40,9 @@ private:
 // sparse matrix in csr format.
 class CsrMatrix: public CsrStencil{
 public:
+	CsrMatrix(const CsrStencil& stencil): CsrStencil(stencil), _vals(stencil.n_nonzero(), 0.0){}
+	CsrMatrix(CsrStencil&& stencil): CsrStencil(std::move(stencil)), _vals(n_nonzero(), 0.0){}
+
 	std::vector<double>& vals() { return _vals; }
 	const std::vector<double>& vals() const { return _vals; }
 
@@ -51,6 +54,8 @@ public:
 	double matvec_irow(int irow, const std::vector<double>& vec) const;
 	// sets diagonal value of the specified row to 1, nondiagonal to 0
 	void set_unit_diagonal(int irow);
+	// returns value by row and column indices
+	double& value(int irow, int icol);
 private:
 	std::vector<double> _vals;
 };

@@ -10,7 +10,10 @@ public:
 	PoissonSolver(std::shared_ptr<ASpatialApproximator> appr);
 
 	void set_bc_dirichlet(int btype, double value);
+	void set_bc_neumann(int btype, double value);
+
 	void set_bc_dirichlet(int btype, std::function<double(Point)> value);
+	void set_bc_neumann(int btype, std::function<double(Point)> value);
 
 	void initialize();
 
@@ -25,6 +28,7 @@ private:
 	std::unique_ptr<AmgcMatrixSolver> _slae_solver;
 
 	std::map<int, std::function<double(Point)>> _bc_dirichlet;
+	std::map<int, std::function<double(Point)>> _bc_neumann;
 };
 
 #endif

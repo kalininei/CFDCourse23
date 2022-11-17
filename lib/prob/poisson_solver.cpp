@@ -8,8 +8,16 @@ void PoissonSolver::set_bc_dirichlet(int btype, double value){
 	set_bc_dirichlet(btype, [value](Point){ return value; });
 }
 
+void PoissonSolver::set_bc_neumann(int btype, double value){
+	set_bc_neumann(btype, [value](Point){ return value; });
+}
+
 void PoissonSolver::set_bc_dirichlet(int btype, std::function<double(Point)> value){
 	_bc_dirichlet[btype] = value;
+}
+
+void PoissonSolver::set_bc_neumann(int btype, std::function<double(Point)> value){
+	_bc_neumann[btype] = value;
 }
 
 void PoissonSolver::initialize(){
@@ -33,6 +41,11 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 	// dirichlet values
 	for (auto& it: _bc_dirichlet){
 		_approximator->apply_bc_dirichlet_rhs(it.first, it.second, _slae_rhs);
+	}
+
+	// neumann values
+	for (auto& it: _bc_dirichlet){
+		_approximator->apply_bc_neumann_to_stiff(it.first, it.second, _slae_rhs);
 	}
 
 	// solve

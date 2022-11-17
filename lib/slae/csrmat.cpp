@@ -96,3 +96,8 @@ void CsrMatrix::matvec_plus(double coeff, const std::vector<double>& vec, std::v
 void CsrMatrix::set_unit_diagonal(int irow){
 	CsrStencil::set_unit_diagonal(irow, _vals);
 }
+
+double& CsrMatrix::value(int irow, int icol){
+	int ind = addr_index(irow, icol);
+	return _vals[ind];
+}
