@@ -14,6 +14,7 @@ public:
 
 	void set_bc_dirichlet(int btype, std::function<double(Point)> value);
 	void set_bc_neumann(int btype, std::function<double(Point)> value);
+	void set_bc_robin(int btype, std::function<double(Point)> alpha, std::function<double(Point)> beta);
 
 	void initialize();
 
@@ -29,6 +30,8 @@ private:
 
 	std::map<int, std::function<double(Point)>> _bc_dirichlet;
 	std::map<int, std::function<double(Point)>> _bc_neumann;
+	std::map<int, std::function<double(Point)>> _bc_robin_alpha;
+	std::map<int, std::function<double(Point)>> _bc_robin_beta;
 };
 
 #endif

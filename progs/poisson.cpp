@@ -38,7 +38,17 @@ void fdm_poisson(){
 
 	// bc
 	slv.set_bc_dirichlet(1, exact_solution(0));
-	slv.set_bc_neumann(2, exact_solution_d1(1));
+
+	// 1. Dirichlet
+	//slv.set_bc_dirichlet(2, exact_solution(1));
+	
+	// 2. Neumann
+	//slv.set_bc_neumann(2, [](Point p)->double{ return -exact_solution_d1(1); });
+
+	// 3. Robin
+	auto alpha = [](Point)->double { return 1; };
+	auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
+	slv.set_bc_robin(2, alpha, beta);
 
 	// rhs
 	std::vector<double> rhs = appr->approximate(rhs_fun);

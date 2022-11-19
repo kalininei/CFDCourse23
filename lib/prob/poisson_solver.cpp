@@ -20,6 +20,11 @@ void PoissonSolver::set_bc_neumann(int btype, std::function<double(Point)> value
 	_bc_neumann[btype] = value;
 }
 
+void PoissonSolver::set_bc_robin(int btype, std::function<double(Point)> alpha, std::function<double(Point)> beta){
+	_bc_robin_alpha[btype] = alpha;
+	_bc_robin_beta[btype] = beta;
+}
+
 void PoissonSolver::initialize(){
 	_slae_rhs.resize(_approximator->n_bases());
 	_rhs_mat = _approximator->mass();
@@ -27,6 +32,11 @@ void PoissonSolver::initialize(){
 
 	for (auto& it: _bc_dirichlet){
 		_approximator->apply_bc_dirichlet_lhs(it.first, diffmat);
+	}
+
+	// robin alpha
+	for (auto& it: _bc_robin_alpha){
+		_approximator->apply_bc_robin_to_stiff_lhs(it.first, it.second, diffmat);
 	}
 
 	_slae_solver->set_matrix(_approximator->stencil(), diffmat);
@@ -44,8 +54,13 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 	}
 
 	// neumann values
-	for (auto& it: _bc_dirichlet){
+	for (auto& it: _bc_neumann){
 		_approximator->apply_bc_neumann_to_stiff(it.first, it.second, _slae_rhs);
+	}
+
+	// robin beta
+	for (auto& it: _bc_robin_beta){
+		_approximator->apply_bc_robin_to_stiff_rhs(it.first, it.second, _slae_rhs);
 	}
 
 	// solve

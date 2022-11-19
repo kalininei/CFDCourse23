@@ -16,6 +16,8 @@ public:
 	std::vector<double> stiff() const override;
 	std::vector<double> transport(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const override;
 	std::vector<double> transport_upwind(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const override;
+
+	void apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const override;
 private:
 	FdmApproximator(std::shared_ptr<RegularGrid> grid);
 

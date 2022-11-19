@@ -24,7 +24,7 @@ public:
 	// sizes
 	int n_points() const;
 
-	// coordinate-wise sizes
+	// coordinate-wise point number
 	int nx() const;
 	int ny() const;
 	int nz() const;

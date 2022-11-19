@@ -80,6 +80,22 @@ void ASpatialApproximator::apply_bc_robin_to_stiff(
 		std::function<double(Point)> alpha_func,
 		std::function<double(Point)> beta_func,
 		std::vector<double>& stiff, std::vector<double>& rhs) const{
+
+	apply_bc_robin_to_stiff_lhs(ibnd, alpha_func, stiff);
+	apply_bc_robin_to_stiff_rhs(ibnd, beta_func, rhs);
+}
+
+void ASpatialApproximator::apply_bc_robin_to_stiff_lhs(
+		int ibnd,
+		std::function<double(Point)> alpha_func,
+		std::vector<double>& stiff) const{
+	_THROW_NOT_IMP_;
+}
+
+void ASpatialApproximator::apply_bc_robin_to_stiff_rhs(
+		int ibnd,
+		std::function<double(Point)> beta_func,
+		std::vector<double>& rhs) const{
 	_THROW_NOT_IMP_;
 }
 

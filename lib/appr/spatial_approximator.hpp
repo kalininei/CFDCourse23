@@ -43,6 +43,7 @@ public:
 
 	// =============== boundary conditions
 	// get boundary basis indices with respective point coordinates
+	// -> (basis index, basis coordinate)
 	const std::vector<std::pair<int, Point>>& boundary_bases(int ibnd) const;
 
 	// forced dirichlet conditions
@@ -57,11 +58,19 @@ public:
 	// du/dn = -q
 	virtual void apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const;
 	// du/dn = -alpha*u + beta
-	virtual void apply_bc_robin_to_stiff(
+	void apply_bc_robin_to_stiff(
 		int ibnd,
 		std::function<double(Point)> alpha_func,
 		std::function<double(Point)> beta_func,
 		std::vector<double>& stiff, std::vector<double>& rhs) const;
+	virtual void apply_bc_robin_to_stiff_lhs(
+		int ibnd,
+		std::function<double(Point)> alpha_func,
+		std::vector<double>& stiff) const;
+	virtual void apply_bc_robin_to_stiff_rhs(
+		int ibnd,
+		std::function<double(Point)> beta_func,
+		std::vector<double>& rhs) const;
 
 	// =============== savers
 	// save single scalar

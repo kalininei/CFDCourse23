@@ -310,3 +310,29 @@ void FdmApproximator::_vtk_save_scalar(std::string filepath, std::map<std::strin
 
 
 }
+
+void FdmApproximator::apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const{
+	// 1. получить узлы (inode), принадлежащие границе ibnd
+	const std::vector<std::pair<int, Point>>& nodes = boundary_bases(ibnd);
+
+	// 2. добавить в rhs[inode] необходимое слагаемое
+	// 2.1 вычисление множителя h
+	DirectionCode code = _grid->boundary(ibnd).direction;
+	double h;
+
+	switch (code){
+		case DirectionCode::X_MINUS: h = _grid->hx(0); break;
+		case DirectionCode::X_PLUS:  h = _grid->hx(_grid->nx()-2); break;
+		case DirectionCode::Y_MINUS: h = _grid->hy(0); break;
+		case DirectionCode::Y_PLUS:  h = _grid->hy(_grid->ny()-2); break;
+		case DirectionCode::Z_MINUS: h = _grid->hz(0); break;
+		case DirectionCode::Z_PLUS:  h = _grid->hz(_grid->nz()-2); break;
+	}
+
+	// 2.2 В цикле по узлам границы вычисляем du/dn и добавляем в rhs
+	for (const auto& b: nodes){
+		double dudn = -q_func(b.second);
+		double value = 2/h * dudn;
+		rhs[b.first] += value;
+	}
+}
