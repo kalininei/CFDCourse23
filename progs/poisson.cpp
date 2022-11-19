@@ -43,7 +43,8 @@ void fdm_poisson(){
 	//slv.set_bc_dirichlet(2, exact_solution(1));
 	
 	// 2. Neumann
-	//slv.set_bc_neumann(2, [](Point p)->double{ return -exact_solution_d1(1); });
+	//auto q = [](Point p)->double { return -exact_solution_d1(p.x); }
+	//slv.set_bc_neumann(2, q);
 
 	// 3. Robin
 	auto alpha = [](Point)->double { return 1; };
