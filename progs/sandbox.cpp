@@ -2,7 +2,7 @@
 #include "prog_common.hpp"
 #include "slae/matrix_solver.hpp"
 
-constexpr double PI2 = 8*std::atan(1.0);
+const double PI2 = 8*std::atan(1.0);
 
 double exact_solution(double x){
 	return sin(PI2*2*x) + 0.4*cos(PI2*7*x);
