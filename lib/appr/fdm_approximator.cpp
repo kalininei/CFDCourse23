@@ -297,7 +297,7 @@ void FdmApproximator::_vtk_save_scalar(std::string filepath, std::map<std::strin
 	for (double c: _grid->xcoo()) ofs << c << std::endl;;
 	ofs << "Y_COORDINATES " << _grid->ny() << " double" << std::endl;
 	for (double c: _grid->ycoo()) ofs << c << std::endl;;
-	ofs << "z_COORDINATES " << _grid->nz() << " double" << std::endl;
+	ofs << "Z_COORDINATES " << _grid->nz() << " double" << std::endl;
 	for (double c: _grid->zcoo()) ofs << c << std::endl;;
 
 	// data
@@ -311,28 +311,71 @@ void FdmApproximator::_vtk_save_scalar(std::string filepath, std::map<std::strin
 
 }
 
+double FdmApproximator::boundary_h(int ibnd) const{
+	DirectionCode code = _grid->boundary(ibnd).direction;
+
+	switch (code){
+		case DirectionCode::X_MINUS: return _grid->hx(0);
+		case DirectionCode::X_PLUS:  return _grid->hx(_grid->nx()-2);
+		case DirectionCode::Y_MINUS: return _grid->hy(0);
+		case DirectionCode::Y_PLUS:  return _grid->hy(_grid->ny()-2);
+		case DirectionCode::Z_MINUS: return _grid->hz(0);
+		case DirectionCode::Z_PLUS:  return _grid->hz(_grid->nz()-2);
+	}
+
+	_THROW_NOT_IMP_;
+}
+
 void FdmApproximator::apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const{
 	// 1. получить узлы (inode), принадлежащие границе ibnd
 	const std::vector<std::pair<int, Point>>& nodes = boundary_bases(ibnd);
 
 	// 2. добавить в rhs[inode] необходимое слагаемое
 	// 2.1 вычисление множителя h
-	DirectionCode code = _grid->boundary(ibnd).direction;
-	double h;
-
-	switch (code){
-		case DirectionCode::X_MINUS: h = _grid->hx(0); break;
-		case DirectionCode::X_PLUS:  h = _grid->hx(_grid->nx()-2); break;
-		case DirectionCode::Y_MINUS: h = _grid->hy(0); break;
-		case DirectionCode::Y_PLUS:  h = _grid->hy(_grid->ny()-2); break;
-		case DirectionCode::Z_MINUS: h = _grid->hz(0); break;
-		case DirectionCode::Z_PLUS:  h = _grid->hz(_grid->nz()-2); break;
-	}
+	double h = boundary_h(ibnd);
 
 	// 2.2 В цикле по узлам границы вычисляем du/dn и добавляем в rhs
 	for (const auto& b: nodes){
 		double dudn = -q_func(b.second);
 		double value = 2/h * dudn;
 		rhs[b.first] += value;
+	}
+}
+
+void FdmApproximator::apply_bc_robin_to_stiff_lhs(
+		int ibnd,
+		std::function<double(Point)> alpha_func,
+		std::vector<double>& stiff) const{
+	// 1. получить узлы (inode), принадлежащие границе ibnd
+	const std::vector<std::pair<int, Point>>& nodes = boundary_bases(ibnd);
+	
+	// 2. вычисление множителя h
+	double h = boundary_h(ibnd);
+
+	// 3. Подставить в диагональ матрицы
+	for (const std::pair<int, Point>& ninfo: nodes){
+		// compute value 2*alpha/h
+		double value = 2*alpha_func(ninfo.second)/h;
+		// insert into diagonal
+		int diagonal_addr = stencil().addr_index(ninfo.first, ninfo.first);
+		stiff[diagonal_addr] += value;
+	}
+}
+
+void FdmApproximator::apply_bc_robin_to_stiff_rhs(
+		int ibnd,
+		std::function<double(Point)> beta_func,
+		std::vector<double>& rhs) const{
+	// 1. получить узлы (inode), принадлежащие границе ibnd
+	const std::vector<std::pair<int, Point>>& nodes = boundary_bases(ibnd);
+	
+	// 2. вычисление множителя h
+	double h = boundary_h(ibnd);
+
+	// 3. Подставить в правую часть
+	for (const std::pair<int, Point>& ninfo: nodes){
+		// compute value 2*beta/h
+		double value = 2*beta_func(ninfo.second)/h;
+		rhs[ninfo.first] += value;
 	}
 }

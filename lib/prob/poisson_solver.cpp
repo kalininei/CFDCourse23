@@ -30,13 +30,14 @@ void PoissonSolver::initialize(){
 	_rhs_mat = _approximator->mass();
 	std::vector<double> diffmat = _approximator->stiff();
 
-	for (auto& it: _bc_dirichlet){
-		_approximator->apply_bc_dirichlet_lhs(it.first, diffmat);
-	}
-
 	// robin alpha
 	for (auto& it: _bc_robin_alpha){
 		_approximator->apply_bc_robin_to_stiff_lhs(it.first, it.second, diffmat);
+	}
+
+	// dirichlet
+	for (auto& it: _bc_dirichlet){
+		_approximator->apply_bc_dirichlet_lhs(it.first, diffmat);
 	}
 
 	_slae_solver->set_matrix(_approximator->stencil(), diffmat);
@@ -48,11 +49,6 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 	// right hand side
 	_approximator->stencil().matvec(_rhs_mat, rhs, _slae_rhs);
 
-	// dirichlet values
-	for (auto& it: _bc_dirichlet){
-		_approximator->apply_bc_dirichlet_rhs(it.first, it.second, _slae_rhs);
-	}
-
 	// neumann values
 	for (auto& it: _bc_neumann){
 		_approximator->apply_bc_neumann_to_stiff(it.first, it.second, _slae_rhs);
@@ -61,6 +57,11 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 	// robin beta
 	for (auto& it: _bc_robin_beta){
 		_approximator->apply_bc_robin_to_stiff_rhs(it.first, it.second, _slae_rhs);
+	}
+	
+	// dirichlet values
+	for (auto& it: _bc_dirichlet){
+		_approximator->apply_bc_dirichlet_rhs(it.first, it.second, _slae_rhs);
 	}
 
 	// solve
