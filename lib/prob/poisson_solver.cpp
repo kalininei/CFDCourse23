@@ -30,6 +30,22 @@ void PoissonSolver::initialize(){
 	_rhs_mat = _approximator->mass();
 	std::vector<double> diffmat = _approximator->stiff();
 
+	// linear term
+	if (_linear_terms.size() > 0){
+		// 1. build vector from linear terms
+		std::vector<double> lin_vec(_approximator->n_bases(), 0.0);
+		for (auto fun: _linear_terms){
+			std::vector<double> lin_vec_i = _approximator->approximate(fun);
+			for (int i=0; i<lin_vec.size(); ++i){
+				lin_vec[i] += lin_vec_i[i];
+			}
+		}
+		// 2. build mass matrix with respect to the linear term
+		std::vector<double> mass_alpha = _approximator->mass(lin_vec);
+		// 3. add to lhs
+		for (size_t i=0; i<diffmat.size(); ++i) diffmat[i] += mass_alpha[i];
+	}
+
 	// robin alpha
 	for (auto& it: _bc_robin_alpha){
 		_approximator->apply_bc_robin_to_stiff_lhs(it.first, it.second, diffmat);
@@ -68,4 +84,9 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 	_slae_solver->solve(_slae_rhs, u);
 
 	std::cout << "Poisson solution obtained" << std::endl;
+}
+
+// add +eps*u to the equation
+void PoissonSolver::add_linear_term(std::function<double(Point)> alpha){
+	_linear_terms.push_back(alpha);
 }

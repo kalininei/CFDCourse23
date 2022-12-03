@@ -169,6 +169,17 @@ std::vector<double> FdmApproximator::mass() const{
 	return ret;
 }
 
+std::vector<double> FdmApproximator::mass(const std::vector<double>& alpha) const{
+	const CsrStencil& s = stencil();
+	std::vector<double> ret(s.n_nonzero(), 0);
+
+	for (int i=0; i<s.n_rows(); ++i){
+		ret[s.addr()[i]] = alpha[i];
+	}
+
+	return ret;
+}
+
 CsrStencil FdmApproximator::_build_stencil() const{
 	std::vector<std::set<int>> ij(n_bases());
 

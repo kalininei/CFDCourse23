@@ -24,6 +24,7 @@ public:
 	virtual std::vector<double> stiff() const;
 	// returns matrix for Identity operator
 	virtual std::vector<double> mass() const;
+	virtual std::vector<double> mass(const std::vector<double>& alpha) const;
 	// returns matrix for Transport operator
 	virtual std::vector<double> transport(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const;
 	// returns matrix for Upwind Transport operator

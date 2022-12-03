@@ -13,6 +13,7 @@ public:
 	std::vector<double> approximate(std::function<double(Point)> func) const override;
 
 	std::vector<double> mass() const override;
+	std::vector<double> mass(const std::vector<double>& alpha) const override;
 	std::vector<double> stiff() const override;
 	std::vector<double> transport(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const override;
 	std::vector<double> transport_upwind(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const override;

@@ -33,23 +33,34 @@ void fdm_poisson(){
 	// spatial approximator
 	std::shared_ptr<FdmApproximator> appr = FdmApproximator::build(grid);
 
-	// solver
+	// solver: -Laplace(u) = f
 	PoissonSolver slv(appr);
 
-	// bc
-	slv.set_bc_dirichlet(1, exact_solution(0));
+	// add +eps*u to the equation
+	auto eps = [](Point)->double { return 1e-6; };
+	slv.add_linear_term(eps);
 
-	// 1. Dirichlet
+	// bc
+	// ==== Left side
+	//// Dirichlet
+	// slv.set_bc_dirichlet(1, exact_solution(0));
+
+	// ... or Neumann
+	auto q1 = [](Point p)->double { return exact_solution_d1(p.x); };
+	slv.set_bc_neumann(1, q1);
+
+	// ==== right side
+	//// Dirichlet
 	//slv.set_bc_dirichlet(2, exact_solution(1));
 	
-	// 2. Neumann
-	//auto q = [](Point p)->double { return -exact_solution_d1(p.x); };
-	//slv.set_bc_neumann(2, q);
+	// ... or Neumann
+	auto q = [](Point p)->double { return -exact_solution_d1(p.x); };
+	slv.set_bc_neumann(2, q);
 
-	//// 3. Robin
-	auto alpha = [](Point)->double { return 1; };
-	auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
-	slv.set_bc_robin(2, alpha, beta);
+	//// ... or Robin
+	//auto alpha = [](Point)->double { return 1; };
+	//auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
+	//slv.set_bc_robin(2, alpha, beta);
 
 	// rhs
 	std::vector<double> rhs = appr->approximate(rhs_fun);

@@ -17,6 +17,10 @@ std::vector<double> ASpatialApproximator::mass() const{
 	_THROW_NOT_IMP_;
 }
 
+std::vector<double> ASpatialApproximator::mass(const std::vector<double>& alpha) const{
+	_THROW_NOT_IMP_;
+}
+
 std::vector<double> ASpatialApproximator::transport(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vz) const{
 	_THROW_NOT_IMP_;
 }

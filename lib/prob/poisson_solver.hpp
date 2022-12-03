@@ -9,6 +9,9 @@ class PoissonSolver{
 public:
 	PoissonSolver(std::shared_ptr<ASpatialApproximator> appr);
 
+	// add +eps*u to the equation
+	void add_linear_term(std::function<double(Point)> alpha);
+
 	void set_bc_dirichlet(int btype, double value);
 	void set_bc_neumann(int btype, double value);
 
@@ -32,6 +35,8 @@ private:
 	std::map<int, std::function<double(Point)>> _bc_neumann;
 	std::map<int, std::function<double(Point)>> _bc_robin_alpha;
 	std::map<int, std::function<double(Point)>> _bc_robin_beta;
+
+	std::vector<std::function<double(Point)>> _linear_terms;
 };
 
 #endif
