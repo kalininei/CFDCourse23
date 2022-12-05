@@ -2,6 +2,7 @@
 #define GRID_BOUNDARY_HPP
 
 #include "common.hpp"
+#include "grid/agrid_boundary.hpp"
 
 enum struct DirectionCode{
 	X_PLUS,
@@ -12,18 +13,15 @@ enum struct DirectionCode{
 	Z_MINUS
 };
 
-class RegularGridBoundary{
+class ARegularGrid;
+
+class RegularGridBoundary: public AGridBoundary{
 public:
-	RegularGridBoundary(DirectionCode direction, const std::vector<int>& point_indices);
+	RegularGridBoundary(DirectionCode direction, const ARegularGrid* grid);
+	RegularGridBoundary(DirectionCode direction, std::function<bool(Point)> filter, const ARegularGrid* grid);
 
 	// direction
 	const DirectionCode direction;
-	const std::vector<int>& point_indices() const { return _point_indices; }
-
-	void remove_points(const std::vector<int>& indices_to_remove);
-private:
-	// boundary points indices
-	std::vector<int> _point_indices;
 };
 
 

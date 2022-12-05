@@ -1,11 +1,11 @@
 #include <fstream>
 #include "appr/fdm_approximator.hpp"
 
-std::shared_ptr<FdmApproximator> FdmApproximator::build(std::shared_ptr<RegularGrid> grid){
+std::shared_ptr<FdmApproximator> FdmApproximator::build(std::shared_ptr<ARegularGrid> grid){
 	return std::shared_ptr<FdmApproximator>(new FdmApproximator(grid));
 }
 
-FdmApproximator::FdmApproximator(std::shared_ptr<RegularGrid> grid): ASpatialApproximator(), _grid(grid){}
+FdmApproximator::FdmApproximator(std::shared_ptr<ARegularGrid> grid): ASpatialApproximator(), _grid(grid){}
 
 int FdmApproximator::n_bases() const{
 	return _grid->n_points();
@@ -24,8 +24,8 @@ std::map<int, std::vector<std::pair<int, Point>>> FdmApproximator::_build_bounda
 
 	for (int btype: btypes){
 		std::vector<std::pair<int, Point>>& vec = ret[btype];
-		const RegularGridBoundary& bnd = _grid->boundary(btype);
-		for (int ipoint: bnd.point_indices()){
+		const RegularGridBoundary& bnd = _grid->reg_boundary(btype);
+		for (int ipoint: bnd.grid_point_indices()){
 			std::pair<std::set<int>::const_iterator, bool> ires = used_points.insert(ipoint);
 			// if point was not used before
 			if (ires.second){
@@ -67,7 +67,7 @@ std::vector<double> FdmApproximator::stiff() const{
 	for (int iz=0; iz<nz; ++iz)
 	for (int iy=0; iy<ny; ++iy){
 		//left
-		ijk = _grid->ijk_to_glob(0, iy, iz);
+		ijk = _grid->point_ijk_to_glob(0, iy, iz);
 		hplus = _grid->hx(0);
 		vplus = 2/hplus/hplus;
 		ret[s.addr_index(ijk, ijk)] += vplus;
@@ -75,7 +75,7 @@ std::vector<double> FdmApproximator::stiff() const{
 
 		// internal
 		for (int ix=1; ix<nx-1; ++ix){
-			ijk = _grid->ijk_to_glob(ix, iy, iz);
+			ijk = _grid->point_ijk_to_glob(ix, iy, iz);
 			hplus = _grid->hx(ix);
 			hminus = _grid->hx(ix-1);
 			vplus = 2/(hplus+hminus)/hplus;
@@ -86,7 +86,7 @@ std::vector<double> FdmApproximator::stiff() const{
 		}
 
 		// right
-		ijk = _grid->ijk_to_glob(nx-1, iy, iz);
+		ijk = _grid->point_ijk_to_glob(nx-1, iy, iz);
 		hminus = _grid->hx(nx-2);
 		vminus = 2/hminus/hminus;
 		ret[s.addr_index(ijk, ijk)] += vminus;
@@ -98,7 +98,7 @@ std::vector<double> FdmApproximator::stiff() const{
 	for (int iz=0; iz<nz; ++iz)
 	for (int ix=0; ix<nx; ++ix){
 		//left
-		ijk = _grid->ijk_to_glob(ix, 0, iz);
+		ijk = _grid->point_ijk_to_glob(ix, 0, iz);
 		hplus = _grid->hy(0);
 		vplus = 2/hplus/hplus;
 		ret[s.addr_index(ijk, ijk)] += vplus;
@@ -106,7 +106,7 @@ std::vector<double> FdmApproximator::stiff() const{
 
 		// internal
 		for (int iy=1; iy<ny-1; ++iy){
-			ijk = _grid->ijk_to_glob(ix, iy, iz);
+			ijk = _grid->point_ijk_to_glob(ix, iy, iz);
 			hplus = _grid->hy(iy);
 			hminus = _grid->hy(iy-1);
 			vplus = 2/(hplus+hminus)/hplus;
@@ -117,7 +117,7 @@ std::vector<double> FdmApproximator::stiff() const{
 		}
 
 		// right
-		ijk = _grid->ijk_to_glob(ix, ny-1, iz);
+		ijk = _grid->point_ijk_to_glob(ix, ny-1, iz);
 		hminus = _grid->hy(ny-2);
 		vminus = 2/hminus/hminus;
 		ret[s.addr_index(ijk, ijk)] += vminus;
@@ -129,7 +129,7 @@ std::vector<double> FdmApproximator::stiff() const{
 	for (int iy=0; iy<ny; ++iy)
 	for (int ix=0; ix<nx; ++ix){
 		//left
-		ijk = _grid->ijk_to_glob(ix, iy, 0);
+		ijk = _grid->point_ijk_to_glob(ix, iy, 0);
 		hplus = _grid->hz(0);
 		vplus = 2/hplus/hplus;
 		ret[s.addr_index(ijk, ijk)] += vplus;
@@ -137,7 +137,7 @@ std::vector<double> FdmApproximator::stiff() const{
 
 		// internal
 		for (int iz=1; iz<nz-1; ++iz){
-			ijk = _grid->ijk_to_glob(ix, iy, iz);
+			ijk = _grid->point_ijk_to_glob(ix, iy, iz);
 			hplus = _grid->hz(iz);
 			hminus = _grid->hz(iz-1);
 			vplus = 2/(hplus+hminus)/hplus;
@@ -148,7 +148,7 @@ std::vector<double> FdmApproximator::stiff() const{
 		}
 
 		// right
-		ijk = _grid->ijk_to_glob(ix, iy, nz-1);
+		ijk = _grid->point_ijk_to_glob(ix, iy, nz-1);
 		hminus = _grid->hz(nz-2);
 		vminus = 2/hminus/hminus;
 		ret[s.addr_index(ijk, ijk)] += vminus;
@@ -226,7 +226,7 @@ std::vector<double> FdmApproximator::transport_upwind(std::vector<double>& vx, s
 	for (int iz=0; iz<_grid->nz(); ++iz)
 	for (int iy=0; iy<_grid->ny(); ++iy)
 	for (int ix=0; ix<_grid->nx(); ++ix){
-		int ipoint = _grid->ijk_to_glob(ix, iy, iz);
+		int ipoint = _grid->point_ijk_to_glob(ix, iy, iz);
 
 		// x direction
 		if (vx[ipoint] > 0 && ix > 0){
@@ -286,7 +286,7 @@ std::vector<double> FdmApproximator::_build_load_vector() const{
 		if (hy == 0) hy = 1;
 		if (hz == 0) hz = 1;
 
-		int ipoint = _grid->ijk_to_glob(ix, iy, iz);
+		int ipoint = _grid->point_ijk_to_glob(ix, iy, iz);
 		ret[ipoint] = hx*hy*hz;
 	}
 
@@ -323,7 +323,7 @@ void FdmApproximator::_vtk_save_scalar(std::string filepath, std::map<std::strin
 }
 
 double FdmApproximator::boundary_h(int ibnd) const{
-	DirectionCode code = _grid->boundary(ibnd).direction;
+	DirectionCode code = _grid->reg_boundary(ibnd).direction;
 
 	switch (code){
 		case DirectionCode::X_MINUS: return _grid->hx(0);

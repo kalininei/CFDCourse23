@@ -18,7 +18,7 @@ void fdm1_exp(){
 	};
 
 	// grid
-	std::shared_ptr<RegularGrid> grid(new RegularGrid(10, 101));
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(10, 101);
 	grid->define_boundary(1, DirectionCode::X_MINUS);
 	grid->define_boundary(2, DirectionCode::X_PLUS);
 
@@ -74,7 +74,7 @@ void fdm1_imp(){
 	};
 
 	// grid
-	std::shared_ptr<RegularGrid> grid(new RegularGrid(10, 101));
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(10, 101);
 	grid->define_boundary(1, DirectionCode::X_MINUS);
 	grid->define_boundary(2, DirectionCode::X_PLUS);
 

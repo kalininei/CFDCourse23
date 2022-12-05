@@ -9,7 +9,7 @@ class PoissonSolver{
 public:
 	PoissonSolver(std::shared_ptr<ASpatialApproximator> appr);
 
-	// add +eps*u to the equation
+	// add +alpha(x)*u to the equation
 	void add_linear_term(std::function<double(Point)> alpha);
 
 	void set_bc_dirichlet(int btype, double value);

@@ -7,7 +7,7 @@
 
 class FdmApproximator: public ASpatialApproximator{
 public:
-	static std::shared_ptr<FdmApproximator> build(std::shared_ptr<RegularGrid> grid);
+	static std::shared_ptr<FdmApproximator> build(std::shared_ptr<ARegularGrid> grid);
 	
 	int n_bases() const override;
 	std::vector<double> approximate(std::function<double(Point)> func) const override;
@@ -29,7 +29,7 @@ public:
 		std::function<double(Point)> beta_func,
 		std::vector<double>& rhs) const override;
 private:
-	FdmApproximator(std::shared_ptr<RegularGrid> grid);
+	FdmApproximator(std::shared_ptr<ARegularGrid> grid);
 
 	CsrStencil _build_stencil() const override;
 	std::vector<double> _build_load_vector() const override;
@@ -37,6 +37,6 @@ private:
 	void _vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const override;
 
 	double boundary_h(int ibnd) const;
-	std::shared_ptr<RegularGrid> _grid;
+	std::shared_ptr<ARegularGrid> _grid;
 };
 #endif

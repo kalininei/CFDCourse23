@@ -4,7 +4,9 @@
 namespace{
 
 std::vector<double> uniform_range(double x0, double x1, int n){
-	if (n == 0) return {0};
+	if (n == 0){
+		throw std::runtime_error("Number of points in each direction should be >= 1");
+	}
 	std::vector<double> ret;
 	for (int i=0; i<n; ++i){
 		ret.push_back(x0 + i*(x1-x0)/(n-1));
@@ -16,145 +18,101 @@ int find_dim(int nx, int ny, int nz){
 	if (nx < 1 || ny < 1 || nz < 1) {
 		throw std::runtime_error("Regular grid coordinates dimensions should be >= 1");
 	}
+	if (ny > 1 && nx == 1){
+		throw std::runtime_error("1D grids should by defined in x axis");
+	}
+	if (nz > 1 && (nx == 1 || ny == 1)){
+		throw std::runtime_error("3D grids should be defined in xy axes");
+	}
 
-	int ret = 0;
-	if (nx > 1) ret += 1;
-	if (ny > 1) ret += 1;
-	if (nz > 1) ret += 1;
-
-	return ret;
+	if (ny == 1){
+		return 1;
+	} else if (nz == 1){
+		return 2;
+	} else {
+		return 3;
+	}
 };
 
 }
 
-RegularGrid::RegularGrid(
-		double len_x, int nx,
-		double len_y, int ny,
-		double len_z, int nz):
-	RegularGrid(uniform_range(0, len_x, nx),
-	            uniform_range(0, len_y, ny),
-	            uniform_range(0, len_z, nz)) { }
+std::shared_ptr<ARegularGrid> ARegularGrid::build(
+		int nx, double len_x,
+		int ny, double len_y,
+		int nz, double len_z){
+	if (ny == 1){
+		return std::make_shared<RegularGrid1>(nx, len_x);
+	} else if (nz == 1){
+		return std::make_shared<RegularGrid2>(nx, len_x, ny, len_y);
+	} else {
+		return std::make_shared<RegularGrid3>(nx, len_x, ny, len_y, nz, len_z);
+	}
+}
 
+ARegularGrid::ARegularGrid(const std::vector<double>& xcoo,
+                           const std::vector<double>& ycoo,
+                           const std::vector<double>& zcoo)
+		: AGrid(find_dim(xcoo.size(), ycoo.size(), zcoo.size())),
+		  _xcoo(xcoo),
+		  _ycoo(ycoo),
+		  _zcoo(zcoo){ }
 
+void ARegularGrid::define_boundary(int btype, std::shared_ptr<AGridBoundary> boundary){
+	if (dynamic_cast<RegularGridBoundary*>(boundary.get()) == 0){
+		throw std::runtime_error("ARegularGrid should have boundaries of ARegularGridBoundary class");
+	}
+	AGrid::define_boundary(btype, boundary);
+}
 
-RegularGrid::RegularGrid(const std::vector<double>& xcoo,
-                         const std::vector<double>& ycoo,
-                         const std::vector<double>& zcoo):
-		dim(find_dim(xcoo.size(), ycoo.size(), zcoo.size())),
-		_xcoo(xcoo),
-		_ycoo(ycoo),
-		_zcoo(zcoo){ }
-
-void RegularGrid::define_boundary(int btype, DirectionCode dircode){
+void ARegularGrid::define_boundary(int btype, DirectionCode dircode){
 	define_boundary(btype, dircode, [](Point){ return true; });
 }
 
-void RegularGrid::define_boundary(int btype, DirectionCode dircode, std::function<bool(Point)> filter){
-	int istart, iend, jstart, jend, kstart, kend;
-	switch (dircode){
-		case DirectionCode::X_PLUS:
-			istart = _xcoo.size()-1;
-			iend = _xcoo.size();
-			jstart = 0;
-			jend = _ycoo.size();
-			kstart = 0;
-			kend = _zcoo.size();
-			break;
-		case DirectionCode::X_MINUS:
-			istart = 0;
-			iend = 1;
-			jstart = 0;
-			jend = _ycoo.size();
-			kstart = 0;
-			kend = _zcoo.size();
-			break;
-		case DirectionCode::Y_PLUS:
-			istart = 0;
-			iend = _xcoo.size();
-			jstart = _ycoo.size()-1;
-			jend = _ycoo.size();
-			kstart = 0;
-			kend = _zcoo.size();
-			break;
-		case DirectionCode::Y_MINUS:
-			istart = 0;
-			iend = _xcoo.size();
-			jstart = 0;
-			jend = 1;
-			kstart = 0;
-			kend = _zcoo.size();
-			break;
-		case DirectionCode::Z_PLUS:
-			istart = 0;
-			iend = _xcoo.size();
-			jstart = 0;
-			jend = _ycoo.size();
-			kstart = _zcoo.size()-1;
-			kend = _zcoo.size();
-			break;
-		case DirectionCode::Z_MINUS:
-			istart = 0;
-			iend = _xcoo.size();
-			jstart = 0;
-			jend = _ycoo.size();
-			kstart = 0;
-			kend = 1;
-			break;
-	}
-
-	std::vector<int> pindices;
-	for (int k=kstart; k<kend; ++k)
-	for (int j=jstart; j<jend; ++j)
-	for (int i=istart; i<iend; ++i){
-		int g = ijk_to_glob(i, j, k);
-		if (filter(point_ijk(i, j, k))){
-			pindices.push_back(g);
-		}
-	}
-
-	for (auto& bit: _boundary){
-		RegularGridBoundary& b = *bit.second;
-		if (b.direction == dircode){
-			b.remove_points(pindices);
-		}
-	}
-
-	_boundary[btype] = std::make_shared<RegularGridBoundary>(dircode, pindices);
+void ARegularGrid::define_boundary(int btype, DirectionCode dircode, std::function<bool(Point)> filter){
+	define_boundary(btype, std::make_shared<RegularGridBoundary>(dircode, filter, this));
 }
 
-int RegularGrid::n_points() const{
+const RegularGridBoundary& ARegularGrid::reg_boundary(int ibnd) const{
+	return dynamic_cast<const RegularGridBoundary&>(AGrid::boundary(ibnd));
+}
+
+int ARegularGrid::n_points() const{
 	return nx()*ny()*nz();
 }
 
-int RegularGrid::nx() const{
+int ARegularGrid::n_faces() const{
+	return (ny()-1) * (nz()-1) + (nx()-1) * (nz()-1) + (nx()-1) * (ny()-1);
+}
+
+int ARegularGrid::nx() const{
 	return _xcoo.size();
 }
 
-int RegularGrid::ny() const{
+int ARegularGrid::ny() const{
 	return _ycoo.size();
 }
 
-int RegularGrid::nz() const{
+int ARegularGrid::nz() const{
 	return _zcoo.size();
 }
 
-Point RegularGrid::point(int point_index) const{
-	std::array<int, 3> ijk = glob_to_ijk(point_index);
+Point ARegularGrid::point(int point_index) const{
+	std::array<int, 3> ijk = point_glob_to_ijk(point_index);
 	return point_ijk(ijk[0], ijk[1], ijk[2]);
 }
 
-Point RegularGrid::point_ijk(int ix, int iy, int iz) const{
+Point ARegularGrid::point_ijk(int ix, int iy, int iz) const{
 	if (ix < 0 || ix >= nx()) throw std::runtime_error("X index is out of range: " + std::to_string(ix));
 	if (iy < 0 || iy >= ny()) throw std::runtime_error("Y index is out of range: " + std::to_string(iy));
 	if (iz < 0 || iz >= nz()) throw std::runtime_error("Z index is out of range: " + std::to_string(iz));
 	return {_xcoo[ix], _ycoo[iy], _zcoo[iz]};
 }
 
-int RegularGrid::ijk_to_glob(int ix, int iy, int iz) const{
+int ARegularGrid::point_ijk_to_glob(int ix, int iy, int iz) const{
 	return ix + iy*nx() + iz*nx()*ny();
 }
 
-std::array<int, 3> RegularGrid::glob_to_ijk(int point_index) const{
+std::array<int, 3> ARegularGrid::point_glob_to_ijk(int point_index) const{
 	std::array<int, 3> ret;
 
 	int nxy = nx()*ny();
@@ -166,27 +124,218 @@ std::array<int, 3> RegularGrid::glob_to_ijk(int point_index) const{
 	return ret;
 }
 
-double RegularGrid::hx(int ix) const{
+int ARegularGrid::cell_ijk_to_glob(int ix, int iy, int iz) const{
+	return (ix+1) + iy*(nx()-1) + iz*(nx()-1)*(ny()-1);
+}
+
+std::array<int, 3> ARegularGrid::cell_glob_to_ijk(int icell) const{
+	std::array<int, 3> ret;
+
+	ret[2] = icell / ((nx()-1) * (ny()-1));
+	icell -= ret[2] * (nx()-1) * (ny()-1);
+	ret[1] = icell / (ny()-1);
+	ret[0] = icell - (ny()-1);
+
+	return ret;
+}
+
+double ARegularGrid::hx(int ix) const{
 	return _xcoo[ix+1] - _xcoo[ix];
 }
 
-double RegularGrid::hy(int iy) const{
+double ARegularGrid::hy(int iy) const{
 	return _ycoo[iy+1] - _ycoo[iy];
 }
 
-double RegularGrid::hz(int iz) const{
+double ARegularGrid::hz(int iz) const{
 	return _zcoo[iz+1] - _zcoo[iz];
 }
 
-const RegularGridBoundary& RegularGrid::boundary(int ibnd) const{
-	auto fnd = _boundary.find(ibnd);
-	if (fnd == _boundary.end()) throw std::runtime_error(
-		"Boundary " + std::to_string(ibnd) + " not found");
-	return *(fnd->second);
+Point ARegularGrid::face_normal(int iface) const{
+	_THROW_NOT_IMP_;
 }
 
-std::vector<int> RegularGrid::btypes() const {
-	std::vector<int> ret;
-	for (auto bit: _boundary) ret.push_back(bit.first);
-	return ret;
+double ARegularGrid::face_area(int iface) const{
+	_THROW_NOT_IMP_;
+}
+
+double ARegularGrid::cell_volume(int icell) const{
+	_THROW_NOT_IMP_;
+}
+
+std::vector<int> ARegularGrid::tab_cell_face(int icell) const {
+	_THROW_NOT_IMP_;
+}
+
+std::vector<int> ARegularGrid::tab_cell_point(int icell) const {
+	_THROW_NOT_IMP_;
+}
+
+RegularGrid1::RegularGrid1(double len_x, int nx)
+	: RegularGrid1(uniform_range(0, len_x, nx)){
+}
+
+RegularGrid1::RegularGrid1(const std::vector<double>& xcoo): ARegularGrid(xcoo, {0}, {0}){
+	if (dim != 1){
+		throw std::runtime_error("Invalid RegularGrid1");
+	}
+}
+
+RegularGrid2::RegularGrid2(double len_x, int nx, double len_y, int ny)
+	: RegularGrid2(uniform_range(0, len_x, nx), uniform_range(0, len_y, ny)){
+}
+
+RegularGrid2::RegularGrid2(const std::vector<double>& xcoo, const std::vector<double>& ycoo)
+		: ARegularGrid(xcoo, ycoo, {0}){
+	if (dim != 2){
+		throw std::runtime_error("Invalid RegularGrid2");
+	}
+}
+
+RegularGrid3::RegularGrid3(
+		double len_x, int nx,
+		double len_y, int ny,
+		double len_z, int nz)
+		: RegularGrid3(uniform_range(0, len_x, nx), uniform_range(0, len_y, ny), uniform_range(0, len_z, nz)){
+}
+
+RegularGrid3::RegularGrid3(
+		const std::vector<double>& xcoo,
+		const std::vector<double>& ycoo,
+		const std::vector<double>& zcoo)
+		: ARegularGrid(xcoo, ycoo, zcoo){
+	if (dim != 3){
+		throw std::runtime_error("Invalid RegularGrid3");
+	}
+}
+
+int RegularGrid1::face_ijk_to_glob(int ix, int iy, int iz, int idir) const{
+	return ix;
+}
+
+std::array<int, 4> RegularGrid1::face_glob_to_ijk(int iface) const{
+	return {iface, 0, 0, 0};
+}
+
+int RegularGrid2::face_ijk_to_glob(int ix, int iy, int iz, int idir) const{
+	const int nx_xy = nx()*(ny()-1);
+	switch (idir){
+		case 0: return ix + iy*nx();
+		case 1: return ix + iy*(nx()-1) + nx_xy;
+	};
+	_THROW_UNREACHABLE_;
+}
+
+std::array<int, 4> RegularGrid2::face_glob_to_ijk(int iface) const{
+	const int nx_xy = nx()*(ny()-1);
+	if (iface < nx_xy){
+		return {iface % nx(), iface/nx(), 0, 0};
+	} else {
+		iface -= nx_xy;
+		return {iface % (nx()-1), iface / (nx()-1), 0, 1};
+	}
+}
+
+
+int RegularGrid3::face_ijk_to_glob(int ix, int iy, int iz, int idir) const{
+	const int nx_xyz = nx()*(ny()-1)*(nz()-1);
+	const int ny_xyz = (nx()-1)*ny()*(nz()-1);
+
+	switch (idir){
+		case 0: return ix + iy*nx() + iz*nx()*(ny()-1);
+		case 1: return ix + iy*(nx()-1) + iz*(nx()-1)*ny() + nx_xyz;
+		case 2: return ix + iy*(nx()-1) + iz*(nx()-1)*(ny()-1) + nx_xyz + ny_xyz;
+	}
+	_THROW_UNREACHABLE_;
+}
+
+std::array<int, 4> RegularGrid3::face_glob_to_ijk(int iface) const{
+	const int nx_xyz = nx()*(ny()-1)*(nz()-1);
+	const int ny_xyz = (nx()-1)*ny()*(nz()-1);
+
+	if (iface < nx_xyz){
+		int iz = iface / (nx()*(ny()-1));
+		iface -= iz*nx()*(ny()-1);
+		int iy = iface / (nx()-1);
+		iface -= iy*(nx()-1);
+		return {iface, iy, iz, 0};
+	} else if (iface < nx_xyz + ny_xyz){
+		iface -= nx_xyz;
+		int iz = iface / ((nx()-1)*ny());
+		iface -= iz * (nx()-1) * ny();
+		int iy = iface / (nx()-1);
+		iface -= iy * (nx()-1);
+		return {iface, iy, iz, 1};
+	} else {
+		iface -= (nx_xyz + ny_xyz);
+		int iz = iface / ((nx()-1)*(ny()-1));
+		iface -= iz * (nx()-1)*(ny()-1);
+		int iy = iface / (nx()-1);
+		iface -= iy * (nx()-1);
+		return {iface, iy, iz, 2};
+	}
+}
+
+std::vector<int> RegularGrid1::tab_face_point(int iface) const {
+	return {iface};
+}
+
+std::vector<int> RegularGrid2::tab_face_point(int iface) const {
+	std::array<int, 4> locfac = face_glob_to_ijk(iface);
+	int ipoint0 = point_ijk_to_glob(locfac[0], locfac[1], locfac[2]);
+	switch (locfac[3]){
+		case 0: return {ipoint0, ipoint0 + nx()};
+		case 1: return {ipoint0, ipoint0 + 1};
+	}
+	_THROW_UNREACHABLE_;
+}
+
+std::vector<int> RegularGrid3::tab_face_point(int iface) const {
+	std::array<int, 4> locfac = face_glob_to_ijk(iface);
+	int ipoint0 = point_ijk_to_glob(locfac[0], locfac[1], locfac[2]);
+	switch (locfac[3]){
+		case 0: return {ipoint0, ipoint0 + nx(), ipoint0 + nx()*(1 + ny()), ipoint0 + nx()*ny()};
+		case 1: return {ipoint0+1, ipoint0,  ipoint0 + nx()*ny(), ipoint0 + nx()*ny() + 1};
+		case 2: return {ipoint0, ipoint0+1, ipoint0+1+nx(), ipoint0+nx()};
+	}
+	_THROW_UNREACHABLE_;
+}
+
+std::array<int, 2> RegularGrid1::tab_face_cell(int iface) const{
+	if (iface == 0){
+		return {-1, iface};
+	} else if (iface == nx()-1){
+		return {iface-1, -1};
+	} else {
+		return {iface-1, iface};
+	}
+}
+
+std::array<int, 2> RegularGrid2::tab_face_cell(int iface) const{
+	std::array<int, 4> faddr = face_glob_to_ijk(iface);
+	switch (faddr[3]){
+		case 0:
+			return {faddr[0] == 0 ? -1 : cell_ijk_to_glob(faddr[0]-1, faddr[1], 0),
+			        faddr[0] == nx()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], 0)};
+		case 1:
+			return {faddr[1] == ny()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], 0),
+			        faddr[1] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1]-1, 0)};
+	}
+	_THROW_UNREACHABLE_;
+}
+
+std::array<int, 2> RegularGrid3::tab_face_cell(int iface) const{
+	std::array<int, 4> faddr = face_glob_to_ijk(iface);
+	switch (faddr[3]){
+		case 0:
+			return {faddr[0] == 0 ? -1 : cell_ijk_to_glob(faddr[0]-1, faddr[1], faddr[2]),
+			        faddr[0] == nx()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2])};
+		case 1:
+			return {faddr[1] == ny()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2]),
+			        faddr[1] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1]-1, faddr[2])};
+		case 2:
+			return {faddr[2] == nz()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2]),
+			        faddr[2] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2]-1)};
+	}
+	_THROW_UNREACHABLE_;
 }

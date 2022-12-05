@@ -24,4 +24,11 @@
 		throw std::runtime_error("not implemented"); \
 	}
 
+#define _THROW_UNREACHABLE_ \
+	{ \
+		printf("UNREACHABLE CODE ERROR:\n"); \
+		printf("function: %s\nat:       %s:%i\n", __PRETTY_FUNCTION__, __FILE__, __LINE__); \
+		throw std::runtime_error("unreachable code error"); \
+	}
+
 #endif
