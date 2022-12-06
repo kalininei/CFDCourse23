@@ -77,7 +77,7 @@ public:
 	// save single scalar
 	void vtk_save_scalar(std::string filepath, const std::vector<double>& scalar, std::string datacap) const;
 	// save multiple scalars
-	void vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const;
+	virtual void vtk_save_scalars(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const;
 private:
 	struct Cache{
 		CsrStencil stencil;
@@ -87,11 +87,9 @@ private:
 	};
 	mutable Cache _cache;
 
-	virtual CsrStencil _build_stencil() const = 0;
-	virtual std::vector<double> _build_load_vector() const = 0;
-	virtual std::map<int, std::vector<std::pair<int, Point>>> _build_boundary_bases() const = 0;
-
-	virtual void _vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const = 0;
+	virtual CsrStencil _build_stencil() const;
+	virtual std::vector<double> _build_load_vector() const;
+	virtual std::map<int, std::vector<std::pair<int, Point>>> _build_boundary_bases() const;
 };
 
 #endif

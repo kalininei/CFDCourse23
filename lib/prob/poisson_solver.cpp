@@ -1,3 +1,4 @@
+#include "debug.hpp"
 #include "prob/poisson_solver.hpp"
 
 PoissonSolver::PoissonSolver(std::shared_ptr<ASpatialApproximator> appr): _approximator(appr) {
@@ -36,7 +37,7 @@ void PoissonSolver::initialize(){
 		std::vector<double> lin_vec(_approximator->n_bases(), 0.0);
 		for (auto fun: _linear_terms){
 			std::vector<double> lin_vec_i = _approximator->approximate(fun);
-			for (int i=0; i<lin_vec.size(); ++i){
+			for (int i=0; i<(int)lin_vec.size(); ++i){
 				lin_vec[i] += lin_vec_i[i];
 			}
 		}
@@ -57,6 +58,7 @@ void PoissonSolver::initialize(){
 	}
 
 	_slae_solver->set_matrix(_approximator->stencil(), diffmat);
+
 
 	std::cout << "Poisson solver initialized" << std::endl;
 }

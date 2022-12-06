@@ -158,13 +158,21 @@ double ASpatialApproximator::rms(const std::vector<double>& a, std::function<dou
 }
 
 void ASpatialApproximator::vtk_save_scalar(std::string filepath, const std::vector<double>& scalar, std::string datacap) const{
-	return _vtk_save_scalar(filepath, {{datacap, &scalar}});
+	return vtk_save_scalars(filepath, {{datacap, &scalar}});
 }
 
-void ASpatialApproximator::vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{
-	return _vtk_save_scalar(filepath, scalars);
+void ASpatialApproximator::vtk_save_scalars(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{
+	_THROW_NOT_IMP_;
 }
 
-void ASpatialApproximator::_vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{
+CsrStencil ASpatialApproximator::_build_stencil() const{
+	_THROW_NOT_IMP_;
+}
+
+std::vector<double> ASpatialApproximator::_build_load_vector() const{
+	_THROW_NOT_IMP_;
+}
+
+std::map<int, std::vector<std::pair<int, Point>>> ASpatialApproximator::_build_boundary_bases() const{
 	_THROW_NOT_IMP_;
 }

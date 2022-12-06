@@ -22,6 +22,14 @@ int CsrStencil::addr_index(int irow, int jcol) const{
 	throw std::runtime_error("Failed to find csr address");
 }
 
+std::vector<int> CsrStencil::addr_diag() const{
+	return std::vector<int>(_addr.begin(), _addr.end()-1);
+}
+
+void CsrStencil::add_value(int irow, int jcol, double val, std::vector<double>& mat) const{
+	mat[addr_index(irow, jcol)] += val;
+}
+
 void CsrStencil::matvec(const std::vector<double>& mat, const std::vector<double>& vec, std::vector<double>& ret) const{
 	for (int irow=0; irow<n_rows(); ++irow){
 		ret[irow] = 0;

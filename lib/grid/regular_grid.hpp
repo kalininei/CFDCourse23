@@ -10,13 +10,7 @@ class ARegularGrid: public AGrid{
 public:
 	// ===== Overriden from AGrid
 	int n_points() const override;
-	int n_faces() const override;
 	Point point(int ipoint) const override;
-	Point face_normal(int iface) const override;
-	double face_area(int iface) const override;
-	double cell_volume(int icell) const override;
-	std::vector<int> tab_cell_face(int icell) const override;
-	std::vector<int> tab_cell_point(int icell) const override;
 
 	// ===== Native regular grid methods
 	// coordinate-wise point number
@@ -77,6 +71,12 @@ class RegularGrid1: public ARegularGrid{
 public:
 	RegularGrid1(double len_x, int nx);
 	RegularGrid1(const std::vector<double>& xcoo);
+	int n_faces() const override;
+	int n_cells() const override;
+	int n_boundary_faces() const override;
+	double face_area(int iface) const override;
+	double cell_volume(int icell) const override;
+	Vector face_normal(int iface) const override;
 	std::vector<int> tab_face_point(int iface) const override;
 	std::array<int, 2> tab_face_cell(int iface) const override;
 	int face_ijk_to_glob(int ix, int iy, int iz, int idir) const override;
@@ -88,6 +88,12 @@ public:
 	RegularGrid2(double len_x, int nx, double len_y, int ny);
 	RegularGrid2(const std::vector<double>& xcoo,
 	             const std::vector<double>& ycoo);
+	int n_faces() const override;
+	int n_cells() const override;
+	int n_boundary_faces() const override;
+	double face_area(int iface) const override;
+	double cell_volume(int icell) const override;
+	Vector face_normal(int iface) const override;
 	std::vector<int> tab_face_point(int iface) const override;
 	std::array<int, 2> tab_face_cell(int iface) const override;
 	int face_ijk_to_glob(int ix, int iy, int iz, int idir) const override;
@@ -104,6 +110,12 @@ public:
 	RegularGrid3(const std::vector<double>& xcoo,
 	             const std::vector<double>& ycoo,
 	             const std::vector<double>& zcoo);
+	int n_faces() const override;
+	int n_cells() const override;
+	int n_boundary_faces() const override;
+	double face_area(int iface) const override;
+	double cell_volume(int icell) const override;
+	Vector face_normal(int iface) const override;
 	std::vector<int> tab_face_point(int iface) const override;
 	std::array<int, 2> tab_face_cell(int iface) const override;
 	int face_ijk_to_glob(int ix, int iy, int iz, int idir) const override;

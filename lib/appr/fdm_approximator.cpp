@@ -293,12 +293,12 @@ std::vector<double> FdmApproximator::_build_load_vector() const{
 	return ret;
 };
 
-void FdmApproximator::_vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{
+void FdmApproximator::vtk_save_scalars(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{
 	std::ofstream ofs(filepath);
 
 	// header
 	ofs << "# vtk DataFile Version 2.0" << std::endl;
-	ofs << "cfdlib" << std::endl;
+	ofs << "fdm output" << std::endl;
 	ofs << "ASCII" << std::endl;
 
 	// grid

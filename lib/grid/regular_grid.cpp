@@ -80,10 +80,6 @@ int ARegularGrid::n_points() const{
 	return nx()*ny()*nz();
 }
 
-int ARegularGrid::n_faces() const{
-	return (ny()-1) * (nz()-1) + (nx()-1) * (nz()-1) + (nx()-1) * (ny()-1);
-}
-
 int ARegularGrid::nx() const{
 	return _xcoo.size();
 }
@@ -149,26 +145,6 @@ double ARegularGrid::hy(int iy) const{
 
 double ARegularGrid::hz(int iz) const{
 	return _zcoo[iz+1] - _zcoo[iz];
-}
-
-Point ARegularGrid::face_normal(int iface) const{
-	_THROW_NOT_IMP_;
-}
-
-double ARegularGrid::face_area(int iface) const{
-	_THROW_NOT_IMP_;
-}
-
-double ARegularGrid::cell_volume(int icell) const{
-	_THROW_NOT_IMP_;
-}
-
-std::vector<int> ARegularGrid::tab_cell_face(int icell) const {
-	_THROW_NOT_IMP_;
-}
-
-std::vector<int> ARegularGrid::tab_cell_point(int icell) const {
-	_THROW_NOT_IMP_;
 }
 
 RegularGrid1::RegularGrid1(double len_x, int nx)
@@ -285,7 +261,7 @@ std::vector<int> RegularGrid2::tab_face_point(int iface) const {
 	int ipoint0 = point_ijk_to_glob(locfac[0], locfac[1], locfac[2]);
 	switch (locfac[3]){
 		case 0: return {ipoint0, ipoint0 + nx()};
-		case 1: return {ipoint0, ipoint0 + 1};
+		case 1: return {ipoint0+1, ipoint0};
 	}
 	_THROW_UNREACHABLE_;
 }
@@ -295,7 +271,7 @@ std::vector<int> RegularGrid3::tab_face_point(int iface) const {
 	int ipoint0 = point_ijk_to_glob(locfac[0], locfac[1], locfac[2]);
 	switch (locfac[3]){
 		case 0: return {ipoint0, ipoint0 + nx(), ipoint0 + nx()*(1 + ny()), ipoint0 + nx()*ny()};
-		case 1: return {ipoint0+1, ipoint0,  ipoint0 + nx()*ny(), ipoint0 + nx()*ny() + 1};
+		case 1: return {ipoint0,  ipoint0 + nx()*ny(), ipoint0 + nx()*ny() + 1, ipoint0+1};
 		case 2: return {ipoint0, ipoint0+1, ipoint0+1+nx(), ipoint0+nx()};
 	}
 	_THROW_UNREACHABLE_;
@@ -318,8 +294,8 @@ std::array<int, 2> RegularGrid2::tab_face_cell(int iface) const{
 			return {faddr[0] == 0 ? -1 : cell_ijk_to_glob(faddr[0]-1, faddr[1], 0),
 			        faddr[0] == nx()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], 0)};
 		case 1:
-			return {faddr[1] == ny()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], 0),
-			        faddr[1] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1]-1, 0)};
+			return {faddr[1] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1]-1, 0),
+			        faddr[1] == ny()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], 0)};
 	}
 	_THROW_UNREACHABLE_;
 }
@@ -331,11 +307,106 @@ std::array<int, 2> RegularGrid3::tab_face_cell(int iface) const{
 			return {faddr[0] == 0 ? -1 : cell_ijk_to_glob(faddr[0]-1, faddr[1], faddr[2]),
 			        faddr[0] == nx()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2])};
 		case 1:
-			return {faddr[1] == ny()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2]),
-			        faddr[1] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1]-1, faddr[2])};
+			return {faddr[1] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1]-1, faddr[2]),
+			        faddr[1] == ny()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2])};
 		case 2:
-			return {faddr[2] == nz()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2]),
-			        faddr[2] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2]-1)};
+			return {faddr[2] == 0 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2]-1),
+			        faddr[2] == nz()-1 ? -1 : cell_ijk_to_glob(faddr[0], faddr[1], faddr[2])};
+	}
+	_THROW_UNREACHABLE_;
+}
+
+int RegularGrid1::n_boundary_faces() const{
+	return 2;
+}
+
+int RegularGrid2::n_boundary_faces() const{
+	return 2*(nx()-1) + (ny()-1);
+}
+
+int RegularGrid3::n_boundary_faces() const{
+	return 2*((nx()-1)*(ny()-1) + (nx()-1)*(nz()-1) + (ny()-1)*(nz()-1));
+}
+
+int RegularGrid1::n_cells() const{
+	return nx()-1;
+}
+
+int RegularGrid2::n_cells() const{
+	return (nx()-1)*(ny()-1);
+}
+
+int RegularGrid3::n_cells() const{
+	return (nx()-1)*(ny()-1)*(nz()-1);
+}
+
+double RegularGrid1::cell_volume(int icell) const {
+	return hx(icell);
+}
+
+double RegularGrid2::cell_volume(int icell) const {
+	return hx(icell % nx()) * hy(icell / nx());
+}
+
+double RegularGrid3::cell_volume(int icell) const {
+	std::array<int, 3> ijk = cell_glob_to_ijk(icell);
+	return hx(ijk[0]) * hy(ijk[1]) * hz(ijk[2]);
+}
+
+double RegularGrid1::face_area(int iface) const {
+	return 1;
+}
+
+double RegularGrid2::face_area(int iface) const {
+	std::array<int, 4> faddr = face_glob_to_ijk(iface);
+	if (faddr[3] == 0){
+		return hy(faddr[1]);
+	} else {
+		return hx(faddr[0]);
+	}
+}
+
+double RegularGrid3::face_area(int iface) const {
+	std::array<int, 4> faddr = face_glob_to_ijk(iface);
+	if (faddr[3] == 0){
+		return hy(faddr[1])*hz(faddr[2]);
+	} else if (faddr[3] == 1){
+		return hx(faddr[0])*hz(faddr[2]);
+	} else {
+		return hy(faddr[1])*hz(faddr[2]);
+	}
+}
+
+int RegularGrid1::n_faces() const{
+	return nx();
+}
+
+int RegularGrid2::n_faces() const{
+	return (nx()-1)*ny() + nx()*(ny()-1);
+}
+
+int RegularGrid3::n_faces() const{
+	return (ny()-1) * (nz()-1) + (nx()-1) * (nz()-1) + (nx()-1) * (ny()-1);
+}
+
+
+Vector RegularGrid1::face_normal(int iface) const{
+	return {1, 0, 0};
+}
+
+Vector RegularGrid2::face_normal(int iface) const{
+	if (face_glob_to_ijk(iface)[3] == 0){
+		return {1, 0, 0};
+	} else {
+		return {0, 1, 0};
+	}
+}
+
+Vector RegularGrid3::face_normal(int iface) const{
+	switch (face_glob_to_ijk(iface)[3]){
+		case 0: return {1, 0, 0};
+		case 1: return {0, 1, 0};
+		case 2: return {0, 0, 1};
 	}
 	_THROW_UNREACHABLE_;
 }

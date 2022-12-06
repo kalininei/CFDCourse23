@@ -28,13 +28,14 @@ public:
 		int ibnd,
 		std::function<double(Point)> beta_func,
 		std::vector<double>& rhs) const override;
+
+	void vtk_save_scalars(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const override;
 private:
 	FdmApproximator(std::shared_ptr<ARegularGrid> grid);
 
 	CsrStencil _build_stencil() const override;
 	std::vector<double> _build_load_vector() const override;
 	std::map<int, std::vector<std::pair<int, Point>>> _build_boundary_bases() const override;
-	void _vtk_save_scalar(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const override;
 
 	double boundary_h(int ibnd) const;
 	std::shared_ptr<ARegularGrid> _grid;

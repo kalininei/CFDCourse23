@@ -133,7 +133,7 @@ bool AVtkFieldSaver::_apply_saver(double tcurrent, int cur_iter){
 		scalars[it.first] = &data.back();
 	}
 
-	_appr->vtk_save_scalar(fn.str(), scalars);
+	_appr->vtk_save_scalars(fn.str(), scalars);
 
 	_written.emplace_back(fn.str().substr(_filename_startpos), tcurrent);
 	_last_written_iter = cur_iter;

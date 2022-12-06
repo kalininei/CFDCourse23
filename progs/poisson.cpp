@@ -4,6 +4,7 @@
 #include "prob/poisson_solver.hpp"
 #include "grid/regular_grid.hpp"
 #include "appr/fdm_approximator.hpp"
+#include "appr/fvm_approximator.hpp"
 
 const double PI2 = 8*std::atan(1.0);
 
@@ -72,6 +73,50 @@ void fdm_poisson(){
 
 	// show solution
 	appr->vtk_save_scalar(from_output_path("poisson_fdm1.vtk"), x, "data");
+
+	// calculate norm
+	std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
+	std::vector<double> diff(x.size());
+	for (size_t i=0; i<x.size(); ++i) {
+		diff[i] = x[i] - appr_exact[i];
+	}
+
+	double error = appr->norm_2(diff);
+	std::cout << n_cells << " " << error << std::endl;
+}
+
+void fvm_poisson(){
+	int n_cells = 100;
+	// grid
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(1, n_cells + 1);
+	grid->define_boundary(1, DirectionCode::X_MINUS);
+	grid->define_boundary(2, DirectionCode::X_PLUS);
+
+	// spatial approximator
+	std::shared_ptr<ASpatialApproximator> appr = FvmApproximator::build(grid);
+
+	// solver: -Laplace(u) = f
+	PoissonSolver slv(appr);
+
+	// bc
+	// ==== Left side
+	// Dirichlet
+	slv.set_bc_dirichlet(1, exact_solution(0));
+
+	// ==== right side
+	// Dirichlet
+	slv.set_bc_dirichlet(2, exact_solution(1));
+
+	// rhs
+	std::vector<double> rhs = appr->approximate(rhs_fun);
+
+	// solve
+	std::vector<double> x;
+	slv.initialize();
+	slv.solve(rhs, x);
+
+	// show solution
+	appr->vtk_save_scalar(from_output_path("poisson_fvm1.vtk"), x, "data");
 
 	// calculate norm
 	std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
@@ -176,7 +221,8 @@ void fdm3(){
 
 int main(){
 	try{
-		fdm_poisson();
+		//fdm_poisson();
+		fvm_poisson();
 		//fdm1();
 		//fdm2();
 		//fdm3();

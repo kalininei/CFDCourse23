@@ -18,6 +18,9 @@ public:
 	// throws if there is no such entry
 	int addr_index(int irow, int jcol) const;
 
+	// returns vector of diagonal indices
+	std::vector<int> addr_diag() const;
+
 	// ret = mat * vec
 	// mat - values vector of the sparse matrix
 	void matvec(const std::vector<double>& mat, const std::vector<double>& vec, std::vector<double>& ret) const;
@@ -27,6 +30,8 @@ public:
 	double matvec_irow(int irow, const std::vector<double>& mat, const std::vector<double>& vec) const;
 	// sets diagonal value of the specified row to 1, nondiagonal to 0
 	void set_unit_diagonal(int irow, std::vector<double>& mat) const;
+	// adds value to the specified i, j position
+	void add_value(int irow, int jcol, double val, std::vector<double>& mat) const;
 	
 	// build from vector of sets
 	// i-th entry of vector -- column indices in the i-th row

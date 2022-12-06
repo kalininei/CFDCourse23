@@ -76,4 +76,8 @@ inline double vector_cos(const Vector& v1, const Vector& v2){
 	return vector_dot(v1, v2)/vector_len(v1)/vector_len(v2);
 }
 
+inline double point_plane_distance(const Point& p, const Point& plane_point, const Vector& plane_normal){
+	return vector_dot(plane_normal, p - plane_point);
+}
+
 #endif
