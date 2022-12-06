@@ -55,7 +55,6 @@ std::vector<int> AGrid::tab_cell_point(int icell) const{
 			cp.resize(std::unique(cp.begin(), cp.end()) - cp.begin());
 		}
 	}
-
 	return _cache.tab_cell_point[icell];
 }
 
@@ -213,7 +212,9 @@ std::vector<std::vector<int>> AGrid::vtk_cell_array() const{
 			for (int icell=0; icell<n_cells(); ++icell){
 				ret.emplace_back();
 				auto& cret = ret.back();
-				for (int iface: tab_cell_face(icell)){
+				std::vector<int> faces = tab_cell_face(icell);
+				cret.push_back(faces.size());
+				for (int iface: faces){
 					std::vector<int> points = tab_face_point(iface);
 					cret.push_back(int(points.size()));
 					cret.insert(cret.end(), points.begin(), points.end());

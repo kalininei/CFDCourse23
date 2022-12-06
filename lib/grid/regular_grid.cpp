@@ -121,7 +121,7 @@ std::array<int, 3> ARegularGrid::point_glob_to_ijk(int point_index) const{
 }
 
 int ARegularGrid::cell_ijk_to_glob(int ix, int iy, int iz) const{
-	return (ix+1) + iy*(nx()-1) + iz*(nx()-1)*(ny()-1);
+	return ix + iy*(nx()-1) + iz*(nx()-1)*(ny()-1);
 }
 
 std::array<int, 3> ARegularGrid::cell_glob_to_ijk(int icell) const{
@@ -147,7 +147,7 @@ double ARegularGrid::hz(int iz) const{
 	return _zcoo[iz+1] - _zcoo[iz];
 }
 
-RegularGrid1::RegularGrid1(double len_x, int nx)
+RegularGrid1::RegularGrid1(int nx, double len_x)
 	: RegularGrid1(uniform_range(0, len_x, nx)){
 }
 
@@ -157,7 +157,7 @@ RegularGrid1::RegularGrid1(const std::vector<double>& xcoo): ARegularGrid(xcoo, 
 	}
 }
 
-RegularGrid2::RegularGrid2(double len_x, int nx, double len_y, int ny)
+RegularGrid2::RegularGrid2(int nx, double len_x, int ny, double len_y)
 	: RegularGrid2(uniform_range(0, len_x, nx), uniform_range(0, len_y, ny)){
 }
 
@@ -169,9 +169,9 @@ RegularGrid2::RegularGrid2(const std::vector<double>& xcoo, const std::vector<do
 }
 
 RegularGrid3::RegularGrid3(
-		double len_x, int nx,
-		double len_y, int ny,
-		double len_z, int nz)
+		int nx, double len_x,
+		int ny, double len_y,
+		int nz, double len_z)
 		: RegularGrid3(uniform_range(0, len_x, nx), uniform_range(0, len_y, ny), uniform_range(0, len_z, nz)){
 }
 
@@ -232,8 +232,8 @@ std::array<int, 4> RegularGrid3::face_glob_to_ijk(int iface) const{
 	if (iface < nx_xyz){
 		int iz = iface / (nx()*(ny()-1));
 		iface -= iz*nx()*(ny()-1);
-		int iy = iface / (nx()-1);
-		iface -= iy*(nx()-1);
+		int iy = iface / nx();
+		iface -= iy*nx();
 		return {iface, iy, iz, 0};
 	} else if (iface < nx_xyz + ny_xyz){
 		iface -= nx_xyz;
@@ -321,7 +321,7 @@ int RegularGrid1::n_boundary_faces() const{
 }
 
 int RegularGrid2::n_boundary_faces() const{
-	return 2*(nx()-1) + (ny()-1);
+	return 2*(nx() + ny() - 2);
 }
 
 int RegularGrid3::n_boundary_faces() const{
@@ -386,7 +386,7 @@ int RegularGrid2::n_faces() const{
 }
 
 int RegularGrid3::n_faces() const{
-	return (ny()-1) * (nz()-1) + (nx()-1) * (nz()-1) + (nx()-1) * (ny()-1);
+	return nx() * (ny()-1) * (nz()-1) + (nx()-1) * ny() * (nz()-1) + (nx()-1) * (ny()-1) * nz();
 }
 
 

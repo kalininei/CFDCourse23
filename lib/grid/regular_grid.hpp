@@ -69,7 +69,7 @@ private:
 
 class RegularGrid1: public ARegularGrid{
 public:
-	RegularGrid1(double len_x, int nx);
+	RegularGrid1(int nx, double len_x);
 	RegularGrid1(const std::vector<double>& xcoo);
 	int n_faces() const override;
 	int n_cells() const override;
@@ -85,7 +85,7 @@ public:
 
 class RegularGrid2: public ARegularGrid{
 public:
-	RegularGrid2(double len_x, int nx, double len_y, int ny);
+	RegularGrid2(int nx, double len_x, int ny, double len_y);
 	RegularGrid2(const std::vector<double>& xcoo,
 	             const std::vector<double>& ycoo);
 	int n_faces() const override;
@@ -103,9 +103,9 @@ public:
 class RegularGrid3: public ARegularGrid{
 public:
 	RegularGrid3(
-		double len_x, int nx,
-		double len_y, int ny,
-		double len_z, int nz);
+		int nx, double len_x,
+		int ny, double len_y,
+		int nz, double len_z);
 
 	RegularGrid3(const std::vector<double>& xcoo,
 	             const std::vector<double>& ycoo,

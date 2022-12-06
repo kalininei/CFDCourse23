@@ -27,7 +27,7 @@ double rhs_fun(Point p){
 void fdm_poisson(){
 	int n_cells = 100;
 	// grid
-	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(1, n_cells + 1);
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
 	grid->define_boundary(1, DirectionCode::X_MINUS);
 	grid->define_boundary(2, DirectionCode::X_PLUS);
 
@@ -88,7 +88,7 @@ void fdm_poisson(){
 void fvm_poisson(){
 	int n_cells = 100;
 	// grid
-	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(1, n_cells + 1);
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
 	grid->define_boundary(1, DirectionCode::X_MINUS);
 	grid->define_boundary(2, DirectionCode::X_PLUS);
 
@@ -131,7 +131,7 @@ void fvm_poisson(){
 
 void fdm1(){
 	// grid
-	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(10, 100);
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(100, 10);
 	grid->define_boundary(1, DirectionCode::X_MINUS);
 	grid->define_boundary(2, DirectionCode::X_PLUS);
 
@@ -159,7 +159,7 @@ void fdm1(){
 
 void fdm2(){
 	// grid
-	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(10, 100, 1, 10, 0, 0);
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(100, 10, 10, 1, 0, 0);
 	grid->define_boundary(1, DirectionCode::X_MINUS);
 	grid->define_boundary(2, DirectionCode::X_PLUS);
 
@@ -187,7 +187,7 @@ void fdm2(){
 
 void fdm3(){
 	// grid
-	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(1, 30, 1, 30, 1, 30);
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(30, 1, 30, 1, 30, 1);
 	grid->define_boundary(1, DirectionCode::X_MINUS, [](Point p)->bool{
 		if (p.y < 0.3) return false;
 		if (p.y > 0.7) return false;
