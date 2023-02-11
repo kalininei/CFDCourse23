@@ -1,3 +1,4 @@
+/// agrid.hpp
 #ifndef GRID_AGRID_HPP
 #define GRID_AGRID_HPP
 
@@ -5,8 +6,14 @@
 #include "geom.hpp"
 #include "grid/agrid_boundary.hpp"
 
+/**
+ * @brief Abstract grid type
+ *
+ * Represents basic grid interface.
+ */
 class AGrid{
 public:
+	/// virtual destructor
 	virtual ~AGrid() = default;
 	AGrid(int ndim);
 

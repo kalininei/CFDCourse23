@@ -3,25 +3,64 @@
 #include "appr/fvm_approximator.hpp"
 
 int FvmApproximator::n_bases() const{
-	_THROW_NOT_IMP_;
+	return _grid->n_cells() + _grid->n_boundary_faces();
 }
 
 std::vector<double> FvmApproximator::approximate(std::function<double(Point)> fun) const{
-	_THROW_NOT_IMP_;
+	std::vector<double> ret(n_bases());
+
+	int k=0;
+	for (int icell=0; icell<_grid->n_cells(); ++icell){
+		ret[k++] = fun(_grid->cell_center(icell));
+	}
+	
+	for (int iface: _grid->boundary_faces()){
+		ret[k++] = fun(_grid->face_center(iface));
+	}
+
+	return ret;
 }
 
 std::shared_ptr<FvmApproximator> FvmApproximator::build(std::shared_ptr<AGrid> grid){
-	_THROW_NOT_IMP_;
+	return std::shared_ptr<FvmApproximator>(new FvmApproximator(grid));
 }
 
 FvmApproximator::FvmApproximator(std::shared_ptr<AGrid> grid): ASpatialApproximator(), _grid(grid){}
 
 CsrStencil FvmApproximator::_build_stencil() const{
-	_THROW_NOT_IMP_;
+	std::vector<std::set<int>> vec_set(n_bases());
+
+	for (size_t i=0; i<vec_set.size(); ++i){
+		vec_set[i].insert(i);
+	}
+	int k = 0;
+	for (int icell=0; icell<_grid->n_cells(); ++icell){
+		std::vector<int> cell_cell = _grid->tab_cell_cell(icell);
+		std::set<int>& row_set = vec_set[k++];
+		for (int cc: cell_cell) row_set.insert(cc);
+	}
+	for (int iface: _grid->boundary_faces()){
+		std::array<int, 2> face_cell = _grid->tab_face_cell(iface);
+		int icell = face_cell[0];
+		if (icell < 0) icell = face_cell[1];
+		int irow_face = k++;
+		vec_set[icell].insert(irow_face);
+		vec_set[irow_face].insert(icell);
+		std::cout << icell << " " << irow_face << std::endl;
+	}
+	return CsrStencil::build(vec_set);
 }
 
 std::vector<double> FvmApproximator::mass() const{
-	_THROW_NOT_IMP_;
+	const CsrStencil& s = stencil();
+	std::vector<double> ret(s.n_nonzero(), 0);
+
+	for (int icell=0; icell<_grid->n_cells(); ++icell){
+		int addr = s.addr_index(icell, icell);
+		ret[addr] = _grid->cell_volume(icell);
+	}
+
+	return ret;
 }
 
 std::vector<double> FvmApproximator::stiff() const{

@@ -62,3 +62,4 @@ endif(MSVC)
 
 add_subdirectory(lib)
 add_subdirectory(progs)
+add_subdirectory(doc)
