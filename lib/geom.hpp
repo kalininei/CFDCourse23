@@ -52,6 +52,11 @@ inline Point operator/(const Point& p, double c){
 	return {p.x/c, p.y/c, p.z/c};
 }
 
+inline std::ostream& operator<<(std::ostream& s, const Point& p){
+	s << "(" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
+	return s;
+}
+
 inline double vector_dot(const Vector& v1, const Vector& v2){
 	return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
 }

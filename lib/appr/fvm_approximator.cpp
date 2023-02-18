@@ -46,7 +46,6 @@ CsrStencil FvmApproximator::_build_stencil() const{
 		int irow_face = k++;
 		vec_set[icell].insert(irow_face);
 		vec_set[irow_face].insert(icell);
-		std::cout << icell << " " << irow_face << std::endl;
 	}
 	return CsrStencil::build(vec_set);
 }
@@ -64,15 +63,114 @@ std::vector<double> FvmApproximator::mass() const{
 }
 
 std::vector<double> FvmApproximator::stiff() const{
-	_THROW_NOT_IMP_;
+	const CsrStencil& s = stencil();
+	std::vector<double> ret(s.n_nonzero(), 0);
+
+	// internal faces loop
+	for (int k: _grid->internal_faces()){
+		int i, j;
+		double area;
+		double hik, hjk;
+
+		std::array<int, 2> cells = _grid->tab_face_cell(k);
+		i = cells[0];
+		j = cells[1];
+		area = _grid->face_area(k);
+		
+		// calculate plane equation
+		double A, B, C, D;
+		Vector normal = _grid->face_normal(k);
+		Point pk = _grid->face_center(k);
+		A = normal.x;
+		B = normal.y;
+		C = normal.z;
+		D = -(A*pk.x + B*pk.y + C*pk.z);
+		double denum = std::sqrt(A*A + B*B + C*C);
+
+		// hik
+		Point pi = _grid->cell_center(i);
+		hik = std::abs(A*pi.x + B*pi.y + C*pi.z + D)/denum;
+
+		// hjk
+		Point pj = _grid->cell_center(j);
+		hjk = std::abs(A*pj.x + B*pj.y + C*pj.z + D)/denum;
+		
+		double val = 1.0/(hik + hjk) * area;
+		s.add_value(i, i, val, ret);
+		s.add_value(j, j, val, ret);
+		s.add_value(i, j, -val, ret);
+		s.add_value(j, i, -val, ret);
+	}
+
+	// boundary faces loop
+	int unk_k = _grid->n_cells();
+	for (int k: _grid->boundary_faces()){
+		int i;
+		double hik;
+		double area;
+
+		// i
+		std::array<int, 2> cells = _grid->tab_face_cell(k);
+		i = std::max(cells[0], cells[1]);
+
+		// area
+		area = _grid->face_area(k);
+		
+		// calculate plane equation
+		double A, B, C, D;
+		Vector normal = _grid->face_normal(k);
+		Point pk = _grid->face_center(k);
+		A = normal.x;
+		B = normal.y;
+		C = normal.z;
+		D = -(A*pk.x + B*pk.y + C*pk.z);
+		double denum = std::sqrt(A*A + B*B + C*C);
+
+		// hik
+		Point pi = _grid->cell_center(i);
+		hik = std::abs(A*pi.x + B*pi.y + C*pi.z + D)/denum;
+
+		double val = 1.0/hik * area;
+		s.add_value(i, i, val, ret);
+		s.add_value(i, unk_k, -val, ret);
+
+		++unk_k;
+	}
+
+	return ret;
 }
 
 std::map<int, std::vector<std::pair<int, Point>>> FvmApproximator::_build_boundary_bases() const{
-	_THROW_NOT_IMP_;
+	std::map<int, std::vector<std::pair<int, Point>>> ret;
+
+	std::vector<int> bfaces = _grid->boundary_faces();
+
+	std::map<int, int> grid_to_bnd_face;
+	for (int i=0; i<(int)bfaces.size(); ++i){
+		grid_to_bnd_face[bfaces[i]] = i;
+	}
+
+	for (int btype: _grid->btypes()){
+		std::vector<std::pair<int, Point>>& vec = ret[btype];
+		const AGridBoundary& bnd = _grid->boundary(btype);
+		for (int iface: bnd.grid_face_indices()){
+			// index of the face amoung boundary faces
+			int bnd_face_index = grid_to_bnd_face[iface];
+			// index of the basis
+			int basis_index = _grid->n_cells() + bnd_face_index;
+			vec.push_back({basis_index, _grid->face_center(iface)});
+		}
+	}
+
+	return ret;
 }
 
 std::vector<double> FvmApproximator::_build_load_vector() const{
-	_THROW_NOT_IMP_;
+	std::vector<double> ret(n_bases(), 0);
+	for (int i=0; i<_grid->n_cells(); ++i){
+		ret[i] = _grid->cell_volume(i);
+	}
+	return ret;
 }
 
 void FvmApproximator::vtk_save_scalars(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const{

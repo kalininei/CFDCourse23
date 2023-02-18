@@ -3,6 +3,7 @@
 #include "prog_common.hpp"
 #include "prob/poisson_solver.hpp"
 #include "grid/regular_grid.hpp"
+#include "grid/unstructured_grid.hpp"
 #include "appr/fdm_approximator.hpp"
 #include "appr/fvm_approximator.hpp"
 
@@ -28,8 +29,8 @@ void fdm_poisson(){
 	int n_cells = 100;
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
-	grid->define_boundary(1, DirectionCode::X_MINUS);
-	grid->define_boundary(2, DirectionCode::X_PLUS);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
 	// spatial approximator
 	std::shared_ptr<FdmApproximator> appr = FdmApproximator::build(grid);
@@ -89,8 +90,8 @@ void fvm_poisson(){
 	int n_cells = 100;
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
-	grid->define_boundary(1, DirectionCode::X_MINUS);
-	grid->define_boundary(2, DirectionCode::X_PLUS);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
 	// spatial approximator
 	std::shared_ptr<ASpatialApproximator> appr = FvmApproximator::build(grid);
@@ -132,8 +133,8 @@ void fvm_poisson(){
 void fdm1(){
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(100, 10);
-	grid->define_boundary(1, DirectionCode::X_MINUS);
-	grid->define_boundary(2, DirectionCode::X_PLUS);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
 	// spatial approximator
 	std::shared_ptr<FdmApproximator> appr = FdmApproximator::build(grid);
@@ -159,9 +160,9 @@ void fdm1(){
 
 void fdm2(){
 	// grid
-	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(100, 10, 10, 1, 0, 0);
-	grid->define_boundary(1, DirectionCode::X_MINUS);
-	grid->define_boundary(2, DirectionCode::X_PLUS);
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(100, 10, 10, 1, 1, 0);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
 	// spatial approximator
 	std::shared_ptr<FdmApproximator> appr = FdmApproximator::build(grid);
@@ -188,14 +189,14 @@ void fdm2(){
 void fdm3(){
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(30, 1, 30, 1, 30, 1);
-	grid->define_boundary(1, DirectionCode::X_MINUS, [](Point p)->bool{
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS, [](Point p)->bool{
 		if (p.y < 0.3) return false;
 		if (p.y > 0.7) return false;
 		if (p.z < 0.3) return false;
 		if (p.z > 0.7) return false;
 		return true;
 	});
-	grid->define_boundary(2, DirectionCode::X_PLUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
 	// spatial approximator
 	std::shared_ptr<FdmApproximator> appr = FdmApproximator::build(grid);
@@ -222,10 +223,11 @@ void fdm3(){
 int main(){
 	try{
 		//fdm_poisson();
-		fvm_poisson();
 		//fdm1();
 		//fdm2();
 		//fdm3();
+
+		fvm_poisson();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;

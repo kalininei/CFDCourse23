@@ -57,23 +57,20 @@ ARegularGrid::ARegularGrid(const std::vector<double>& xcoo,
 		  _ycoo(ycoo),
 		  _zcoo(zcoo){ }
 
-void ARegularGrid::define_boundary(int btype, std::shared_ptr<AGridBoundary> boundary){
-	if (dynamic_cast<RegularGridBoundary*>(boundary.get()) == 0){
-		throw std::runtime_error("ARegularGrid should have boundaries of ARegularGridBoundary class");
-	}
-	AGrid::define_boundary(btype, boundary);
+void ARegularGrid::define_reg_boundary(int btype, DirectionCode dircode){
+	define_reg_boundary(btype, dircode, [](Point){ return true; });
 }
 
-void ARegularGrid::define_boundary(int btype, DirectionCode dircode){
-	define_boundary(btype, dircode, [](Point){ return true; });
-}
-
-void ARegularGrid::define_boundary(int btype, DirectionCode dircode, std::function<bool(Point)> filter){
+void ARegularGrid::define_reg_boundary(int btype, DirectionCode dircode, std::function<bool(Point)> filter){
 	define_boundary(btype, std::make_shared<RegularGridBoundary>(dircode, filter, this));
 }
 
 const RegularGridBoundary& ARegularGrid::reg_boundary(int ibnd) const{
-	return dynamic_cast<const RegularGridBoundary&>(AGrid::boundary(ibnd));
+	try{
+		return dynamic_cast<const RegularGridBoundary&>(AGrid::boundary(ibnd));
+	} catch (std::bad_cast){
+		throw std::runtime_error(std::to_string(ibnd) + " boundary is not of RegularGridBoundary class");
+	}
 }
 
 int ARegularGrid::n_points() const{

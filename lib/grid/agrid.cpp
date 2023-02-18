@@ -21,6 +21,21 @@ void AGrid::define_boundary(int btype, std::shared_ptr<AGridBoundary> boundary){
 	_boundary[btype] = boundary;
 }
 
+void AGrid::define_boundary(int btype, std::function<bool(Point)> face_center_filter){
+	// find boundary faces which are not assigned to any boundary
+	std::vector<int> bfaces = boundary_faces();
+	std::set<int> bfaces_set(bfaces.begin(), bfaces.end());
+	for (auto it: _boundary){
+		for (int iface: it.second->grid_face_indices()){
+			bfaces_set.erase(iface);
+		}
+	}
+
+	std::vector<int> bfaces_filtered(bfaces_set.begin(), bfaces_set.end());
+	auto bnd = std::make_shared<AGridBoundary>(bfaces_filtered, face_center_filter, this);
+	define_boundary(btype, bnd);
+}
+
 Point AGrid::face_center(int iface) const{
 	int k = 0;
 	Point ret {};

@@ -48,9 +48,8 @@ public:
 	const RegularGridBoundary& reg_boundary(int ibnd) const;
 
 	// defines boundary
-	void define_boundary(int btype, DirectionCode dircode);
-	void define_boundary(int btype, DirectionCode dircode, std::function<bool(Point)> filter);
-	void define_boundary(int btype, std::shared_ptr<AGridBoundary> boundary) override;
+	void define_reg_boundary(int btype, DirectionCode dircode);
+	void define_reg_boundary(int btype, DirectionCode dircode, std::function<bool(Point)> filter);
 
 	static std::shared_ptr<ARegularGrid> build(
 		int nx, double len_x,

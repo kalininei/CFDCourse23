@@ -19,8 +19,8 @@ void fdm1_exp(){
 
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(10, 101);
-	grid->define_boundary(1, DirectionCode::X_MINUS);
-	grid->define_boundary(2, DirectionCode::X_PLUS);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
 	// spatial approximator
 	std::shared_ptr<FdmApproximator> appr = FdmApproximator::build(grid);
@@ -75,8 +75,8 @@ void fdm1_imp(){
 
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(10, 101);
-	grid->define_boundary(1, DirectionCode::X_MINUS);
-	grid->define_boundary(2, DirectionCode::X_PLUS);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
 	// spatial approximator
 	std::shared_ptr<FdmApproximator> appr = FdmApproximator::build(grid);

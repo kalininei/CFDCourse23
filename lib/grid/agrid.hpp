@@ -84,13 +84,17 @@ public:
 	std::vector<int> face_btypes() const;
 
 	// define boundary
-	virtual void define_boundary(int btype, std::shared_ptr<AGridBoundary> boundary);
+	void define_boundary(int btype, std::function<bool(Point)> face_center_filter);
 
 	// vtk converters
 	virtual std::vector<std::vector<int>> vtk_cell_array() const;
 	virtual std::vector<int> vtk_cell_types() const;
 	virtual std::vector<std::vector<int>> vtk_boundary_face_array() const;
 	virtual std::vector<int> vtk_boundary_face_types() const;
+
+protected:
+	void define_boundary(int btype, std::shared_ptr<AGridBoundary> boundary);
+
 private:
 	struct Cache{
 		std::vector<std::vector<int>> tab_cell_point;
