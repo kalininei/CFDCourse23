@@ -1,6 +1,8 @@
 #include "unstructured_grid.hpp"
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <numeric>
 
 namespace{
 
@@ -226,7 +228,7 @@ struct VtkFace{
 			std::rotate(points.begin(), minit, points.begin() + points_size);
 			if (points[1] > points[points_size-1]){
 				was_reverted = true;
-				std::reverse(points.begin()+1, points.begin()+points.size());
+				std::reverse(points.begin()+1, points.begin()+points_size);
 			}
 		}
 	};
@@ -389,7 +391,7 @@ std::shared_ptr<UnstructuredGrid> UnstructuredGrid::read_from_vtk(std::string fn
 
 	std::vector<Point> points(n_points);
 	for (int i=0; i<n_points; ++i){
-		ifs >> points[i].x >> points[i].y >> tmp;
+		ifs >> points[i].x >> points[i].y >> points[i].z;
 	}
 	std::cout << n_points << " points" << std::endl;
 
@@ -542,4 +544,95 @@ std::vector<int> UnstructuredGrid::tab_face_point(int iface) const{
 
 std::array<int, 2> UnstructuredGrid::tab_face_cell(int iface) const{
 	return {_tab_face_cell[iface].left_cell, _tab_face_cell[iface].right_cell};
+}
+
+void UnstructuredGrid::vtk_save_cells(std::string fpath) const{
+	std::ofstream ofs(fpath);
+
+	// header
+	ofs << "# vtk DataFile Version 2.0" << std::endl;
+	ofs << "fvm output" << std::endl;
+	ofs << "ASCII" << std::endl;
+
+	// grid
+	ofs << "DATASET UNSTRUCTURED_GRID" << std::endl;
+	ofs << "POINTS " << n_points() << " double" << std::endl;
+	for (int ipoint=0; ipoint<n_points(); ++ipoint){
+		auto point = this->point(ipoint);
+		ofs << point.x << " " << point.y << " " << point.z << std::endl;
+		std::cout << point.x << " " << point.y << " " << point.z << std::endl;
+	}
+
+	int nc = n_cells();
+
+	std::vector<std::vector<int>> cell_array = vtk_cell_array();
+	std::vector<int> cell_types = vtk_cell_types();
+
+	int nfull = std::accumulate(
+		cell_array.begin(), cell_array.end(), 0,
+		[](int ret, const std::vector<int>& v)->int{ return ret + int(v.size()) + 1; });
+	ofs << "CELLS " << nc << " " << nfull << std::endl;
+	for (const auto& ca: cell_array){
+		ofs << ca.size() << " ";
+		for (int icell: ca){
+			ofs << icell << " ";
+		}
+		ofs << std::endl;
+	}
+
+	ofs << "CELL_TYPES " << nc << std::endl;
+	for (int v: cell_types){
+		ofs << v << std::endl;
+	}
+}
+
+void UnstructuredGrid::vtk_save_faces(std::string fpath) const{
+	std::ofstream ofs(fpath);
+
+	// header
+	ofs << "# vtk DataFile Version 2.0" << std::endl;
+	ofs << "fvm output" << std::endl;
+	ofs << "ASCII" << std::endl;
+
+	// grid
+	ofs << "DATASET UNSTRUCTURED_GRID" << std::endl;
+	ofs << "POINTS " << n_points() << " double" << std::endl;
+	for (int ipoint=0; ipoint<n_points(); ++ipoint){
+		auto point = this->point(ipoint);
+		ofs << point.x << " " << point.y << " " << point.z << std::endl;
+		std::cout << point.x << " " << point.y << " " << point.z << std::endl;
+	}
+
+	int nc = n_faces();
+
+	std::vector<std::vector<int>> cell_array;
+	for (int iface=0; iface<n_faces(); ++iface){
+		std::vector<int> ipoints = tab_face_point(iface);
+		cell_array.push_back(ipoints);
+	}
+
+	int nfull = std::accumulate(
+		cell_array.begin(), cell_array.end(), 0,
+		[](int ret, const std::vector<int>& v)->int{ return ret + int(v.size()) + 1; });
+	ofs << "CELLS " << nc << " " << nfull << std::endl;
+	for (const auto& ca: cell_array){
+		ofs << ca.size() << " ";
+		for (int icell: ca){
+			ofs << icell << " ";
+		}
+		ofs << std::endl;
+	}
+
+	int ct = -1;
+	if (dim == 1){
+		ct = 1;
+	} else if (dim == 2){
+		ct = 3;
+	} else if (dim == 3){
+		ct = 7;
+	}
+	ofs << "CELL_TYPES " << nc << std::endl;
+	for (int i=0; i<nc; ++i){
+		ofs << ct << std::endl;
+	}
 }

@@ -17,6 +17,8 @@ public:
 	std::array<int, 2> tab_face_cell(int iface) const override;
 
 	static std::shared_ptr<UnstructuredGrid> read_from_vtk(std::string fn);
+	void vtk_save_cells(std::string fpath) const;
+	void vtk_save_faces(std::string fpath) const;
 private:
 	UnstructuredGrid(int ndim);
 

@@ -1,5 +1,5 @@
 // grid size
-lc = 1e-1;
+lc = 1e-0;
 // rectangle sizes
 w = 1.0;
 h = 1.0;

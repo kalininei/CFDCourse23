@@ -220,6 +220,42 @@ void fdm3(){
 	appr->vtk_save_scalar(from_output_path("poisson_fdm3.vtk"), x, "data");
 }
 
+void fvm2(){
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect.vtk"));
+	grid->define_boundary(1, [](Point p)->bool { return true; });
+
+	// spatial approximator
+	std::shared_ptr<ASpatialApproximator> appr = FvmApproximator::build(grid);
+
+	// solver: -Laplace(u) = f
+	PoissonSolver slv(appr);
+
+	// bc
+	// Dirichlet
+	slv.set_bc_dirichlet(1, [](Point p)->double{ return exact_solution(p.x); });
+
+	// rhs
+	std::vector<double> rhs = appr->approximate(rhs_fun);
+
+	// solve
+	std::vector<double> x;
+	slv.initialize();
+	slv.solve(rhs, x);
+
+	// show solution
+	appr->vtk_save_scalar(from_output_path("poisson_fvm2.vtk"), x, "data");
+
+	// calculate norm
+	std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
+	std::vector<double> diff(x.size());
+	for (size_t i=0; i<x.size(); ++i) {
+		diff[i] = x[i] - appr_exact[i];
+	}
+
+	double error = appr->norm_2(diff);
+	std::cout << grid->n_cells() << " " << error << std::endl;
+}
+
 int main(){
 	try{
 		//fdm_poisson();
@@ -227,7 +263,8 @@ int main(){
 		//fdm2();
 		//fdm3();
 
-		fvm_poisson();
+		//fvm_poisson();
+		fvm2();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;

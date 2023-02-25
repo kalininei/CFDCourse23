@@ -59,7 +59,6 @@ void PoissonSolver::initialize(){
 
 	_slae_solver->set_matrix(_approximator->stencil(), diffmat);
 
-
 	std::cout << "Poisson solver initialized" << std::endl;
 }
 

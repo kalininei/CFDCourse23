@@ -1,9 +1,53 @@
-file(GLOB_RECURSE _source_list *.cpp *.hpp)
-foreach(_source IN ITEMS ${_source_list})
-    get_filename_component(_source_path "${_source}" PATH)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/lib" "" _group_path "${_source_path}")
-    string(REPLACE "/" "\\" _group_path "${_group_path}")
-    source_group("${_group_path}" FILES "${_source}")
-endforeach()
+SET (HEADERS
+      common.hpp
+      debug.hpp
+      geom.hpp
 
-add_library(${CFDLIB_TARGET} STATIC ${_source_list})
+      appr/fdm_approximator.hpp
+      appr/fvm_approximator.hpp
+      appr/output_fields.hpp
+      appr/spatial_approximator.hpp
+
+      grid/agrid.hpp
+      grid/agrid_boundary.hpp
+      grid/regular_grid.hpp
+      grid/regular_grid_boundary.hpp
+      grid/unstructured_grid.hpp
+
+      prob/explicit_transport_solver.hpp
+      prob/implicit_transport_solver.hpp
+      prob/monitor.hpp
+      prob/nonstationary_problem.hpp
+      prob/poisson_solver.hpp
+
+      slae/csrmat.hpp
+      slae/matrix_solver.hpp
+)
+
+SET (SRC
+      debug.cpp
+
+      appr/fdm_approximator.cpp
+      appr/fvm_approximator.cpp
+      appr/spatial_approximator.cpp
+
+      grid/agrid.cpp
+      grid/agrid_boundary.cpp
+      grid/regular_grid.cpp
+      grid/regular_grid_boundary.cpp
+      grid/unstructured_grid.cpp
+
+      prob/poisson_solver.cpp
+      prob/nonstationary_problem.cpp
+      prob/monitor.cpp
+      prob/implicit_transport_solver.cpp
+      prob/explicit_transport_solver.cpp
+
+      slae/matrix_solver.cpp
+      slae/csrmat.cpp
+
+
+)
+
+
+add_library(${CFDLIB_TARGET} STATIC ${HEADERS} ${SRC})
