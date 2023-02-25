@@ -636,3 +636,40 @@ void UnstructuredGrid::vtk_save_faces(std::string fpath) const{
 		ofs << ct << std::endl;
 	}
 }
+
+bool UnstructuredGrid::point_in_cell(Point p, int icell) const{
+	_THROW_NOT_IMP_;
+}
+
+auto UnstructuredGrid::cell_centers_rtree() const -> rtree_t*{
+	if (_cell_centers_rtree == nullptr){
+		_cell_centers_rtree.reset(new rtree_t());
+		for (int icell=0; icell<n_cells(); ++icell){
+			Point cc = cell_center(icell);
+			rtree_ret_t t {boost_point_t{cc.x, cc.y, cc.z}, icell};
+			_cell_centers_rtree->insert(t);
+		}
+	}
+	return _cell_centers_rtree.get();
+}
+
+int UnstructuredGrid::find_cell_index(Point p) const{
+	constexpr int NRET = 5;
+
+	auto* rtree = cell_centers_rtree();
+
+	std::vector<rtree_ret_t> result_n;
+	result_n.reserve(NRET);
+
+	boost_point_t boost_p {p.x, p.y, p.z};
+
+	rtree->query(bg::index::nearest(boost_p, NRET), std::back_inserter(result_n));
+
+	for (auto& pi: result_n){
+		if (point_in_cell(p, pi.second)){
+			return pi.second;
+		}
+	}
+
+	return -1;
+}

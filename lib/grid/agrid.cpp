@@ -266,3 +266,7 @@ std::vector<int> AGrid::vtk_boundary_face_types() const{
 	}
 	_THROW_UNREACHABLE_;
 }
+
+int AGrid::find_cell_index(Point p) const{
+	_THROW_NOT_IMP_;
+}

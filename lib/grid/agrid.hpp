@@ -86,6 +86,11 @@ public:
 	// define boundary
 	void define_boundary(int btype, std::function<bool(Point)> face_center_filter);
 
+	// ==== info
+	// returns index of the cell which contains given point or -1 if point is out
+	// of the grid
+	virtual int find_cell_index(Point p) const;
+
 	// vtk converters
 	virtual std::vector<std::vector<int>> vtk_cell_array() const;
 	virtual std::vector<int> vtk_cell_types() const;

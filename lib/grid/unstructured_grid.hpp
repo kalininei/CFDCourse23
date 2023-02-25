@@ -2,6 +2,9 @@
 #define CFDLIB_UNSTRUCTURED_GRID_HPP
 
 #include "grid/agrid.hpp"
+#include "boost/geometry.hpp"
+
+namespace bg = boost::geometry;
 
 class UnstructuredGrid: public AGrid{
 public:
@@ -19,8 +22,17 @@ public:
 	static std::shared_ptr<UnstructuredGrid> read_from_vtk(std::string fn);
 	void vtk_save_cells(std::string fpath) const;
 	void vtk_save_faces(std::string fpath) const;
+
+	int find_cell_index(Point p) const override;
 private:
+	using boost_point_t = bg::model::point<double, 3, bg::cs::cartesian>;
+	using rtree_ret_t = std::pair<boost_point_t, int>;
+	using rtree_t = bg::index::rtree<rtree_ret_t, bg::index::quadratic<16>>;
+
 	UnstructuredGrid(int ndim);
+
+	rtree_t* cell_centers_rtree() const;
+	bool point_in_cell(Point p, int icell) const;
 
 	// cell-face connection info
 	struct CellFaceEntry{
@@ -57,6 +69,8 @@ private:
 	std::vector<double> _face_areas;
 	std::vector<Vector> _face_normals;
 	std::vector<double> _cell_volumes;
+
+	mutable std::shared_ptr<rtree_t> _cell_centers_rtree;
 };
 
 
