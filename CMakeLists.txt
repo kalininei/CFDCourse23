@@ -11,27 +11,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # ------ boost
-SET(BOOST_MODULES
-	"libs/core;libs/static_assert;libs/type_traits;libs/property_tree;libs/config;libs/optional;libs/throw_exception;"
-	"libs/assert;libs/move;libs/utility;libs/any;libs/type_index;libs/container_hash;libs/mpl;libs/preprocessor;libs/multi_index;"
-	"libs/serialization;libs/tuple;libs/bind;libs/foreach;libs/iterator;libs/detail;libs/math;libs/geometry;"
-	"libs/multiprecision;libs/range;libs/array;libs/lexical_cast;libs/variant;libs/algorithm;"
-	"libs/function;")
-FetchContent_Declare(
-	boost
-	GIT_REPOSITORY https://github.com/boostorg/boost.git
-	GIT_SUBMODULES "tools/cmake;" ${BOOST_MODULES}
-)
-FetchContent_GetProperties(boost)
-if(NOT boost_POPULATED)
-	FetchContent_Populate(boost)
-endif()
-set(BOOST_INCLUDE)
-foreach (m in ${BOOST_MODULES})
-	LIST(APPEND BOOST_INCLUDE ${boost_SOURCE_DIR}/${m}/include)
-endforeach()
-message(${BOOST_INCLUDE})
-include_directories(${BOOST_INCLUDE})
+include_directories(${CMAKE_SOURCE_DIR}/..)
 
 # ------ amgcl
 FetchContent_Declare(

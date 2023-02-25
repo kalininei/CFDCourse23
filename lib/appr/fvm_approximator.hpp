@@ -17,6 +17,7 @@ public:
 
 	std::vector<double> mass() const override;
 	std::vector<double> stiff() const override;
+	double calculate_dudn(int btype, const std::vector<double>& v) const override;
 
 	void vtk_save_scalars(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const override;
 private:
@@ -26,5 +27,7 @@ private:
 	CsrStencil _build_stencil() const override;
 	std::map<int, std::vector<std::pair<int, Point>>> _build_boundary_bases() const override;
 	std::vector<double> _build_load_vector() const override;
+
+	double cell_to_face_center_normal_distance(int icell, int iface) const;
 };
 #endif

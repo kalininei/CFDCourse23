@@ -122,6 +122,10 @@ double ASpatialApproximator::domain_volume() const{
 	return _cache.volume;
 }
 
+double ASpatialApproximator::calculate_dudn(int btype, const std::vector<double>& v) const{
+	_THROW_NOT_IMP_;
+}
+
 double ASpatialApproximator::norm_max(const std::vector<double>& v) const{
 	// only for nodal v
 	if ((int)v.size() < n_bases()) throw std::invalid_argument("norm_max()");

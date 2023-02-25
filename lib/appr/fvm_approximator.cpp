@@ -62,38 +62,32 @@ std::vector<double> FvmApproximator::mass() const{
 	return ret;
 }
 
+double FvmApproximator::cell_to_face_center_normal_distance(int icell, int iface) const{
+	// calculate plane equation
+	std::array<double, 4> plane = _grid->face_plane(iface);
+	double denum = std::sqrt(plane[0]*plane[0] + plane[1]*plane[1] + plane[2]*plane[2]);
+	Point pi = _grid->cell_center(icell);
+	return std::abs(plane[0]*pi.x + plane[1]*pi.y + plane[2]*pi.z + plane[3])/denum;
+}
+
 std::vector<double> FvmApproximator::stiff() const{
 	const CsrStencil& s = stencil();
 	std::vector<double> ret(s.n_nonzero(), 0);
 
 	// internal faces loop
-	for (int k: _grid->internal_faces()){
+	for (int iface: _grid->internal_faces()){
 		int i, j;
 		double area;
 		double hik, hjk;
 
-		std::array<int, 2> cells = _grid->tab_face_cell(k);
+		std::array<int, 2> cells = _grid->tab_face_cell(iface);
 		i = cells[0];
 		j = cells[1];
-		area = _grid->face_area(k);
+		area = _grid->face_area(iface);
 		
-		// calculate plane equation
-		double A, B, C, D;
-		Vector normal = _grid->face_normal(k);
-		Point pk = _grid->face_center(k);
-		A = normal.x;
-		B = normal.y;
-		C = normal.z;
-		D = -(A*pk.x + B*pk.y + C*pk.z);
-		double denum = std::sqrt(A*A + B*B + C*C);
-
 		// hik
-		Point pi = _grid->cell_center(i);
-		hik = std::abs(A*pi.x + B*pi.y + C*pi.z + D)/denum;
-
-		// hjk
-		Point pj = _grid->cell_center(j);
-		hjk = std::abs(A*pj.x + B*pj.y + C*pj.z + D)/denum;
+		hik = cell_to_face_center_normal_distance(i, iface);
+		hjk = cell_to_face_center_normal_distance(j, iface);
 		
 		double val = 1.0/(hik + hjk) * area;
 		s.add_value(i, i, val, ret);
@@ -104,35 +98,27 @@ std::vector<double> FvmApproximator::stiff() const{
 
 	// boundary faces loop
 	int unk_k = _grid->n_cells();
-	for (int k: _grid->boundary_faces()){
+	for (int iface: _grid->boundary_faces()){
 		int i;
 		double hik;
 		double area;
 
-		// i
-		std::array<int, 2> cells = _grid->tab_face_cell(k);
+		// i - basis for the adjacent cell
+		std::array<int, 2> cells = _grid->tab_face_cell(iface);
 		i = std::max(cells[0], cells[1]);
 
 		// area
-		area = _grid->face_area(k);
+		area = _grid->face_area(iface);
 		
-		// calculate plane equation
-		double A, B, C, D;
-		Vector normal = _grid->face_normal(k);
-		Point pk = _grid->face_center(k);
-		A = normal.x;
-		B = normal.y;
-		C = normal.z;
-		D = -(A*pk.x + B*pk.y + C*pk.z);
-		double denum = std::sqrt(A*A + B*B + C*C);
-
 		// hik
-		Point pi = _grid->cell_center(i);
-		hik = std::abs(A*pi.x + B*pi.y + C*pi.z + D)/denum;
+		hik = cell_to_face_center_normal_distance(i, iface);
 
 		double val = 1.0/hik * area;
+
 		s.add_value(i, i, val, ret);
+		s.add_value(unk_k, unk_k, val, ret);
 		s.add_value(i, unk_k, -val, ret);
+		s.add_value(unk_k, i, -val, ret);
 
 		++unk_k;
 	}
@@ -142,26 +128,17 @@ std::vector<double> FvmApproximator::stiff() const{
 
 std::map<int, std::vector<std::pair<int, Point>>> FvmApproximator::_build_boundary_bases() const{
 	std::map<int, std::vector<std::pair<int, Point>>> ret;
-
-	std::vector<int> bfaces = _grid->boundary_faces();
-
-	std::map<int, int> grid_to_bnd_face;
-	for (int i=0; i<(int)bfaces.size(); ++i){
-		grid_to_bnd_face[bfaces[i]] = i;
-	}
-
 	for (int btype: _grid->btypes()){
 		std::vector<std::pair<int, Point>>& vec = ret[btype];
 		const AGridBoundary& bnd = _grid->boundary(btype);
 		for (int iface: bnd.grid_face_indices()){
 			// index of the face amoung boundary faces
-			int bnd_face_index = grid_to_bnd_face[iface];
+			int bnd_face_index = _grid->get_boundary_index_for_face(iface);
 			// index of the basis
 			int basis_index = _grid->n_cells() + bnd_face_index;
 			vec.push_back({basis_index, _grid->face_center(iface)});
 		}
 	}
-
 	return ret;
 }
 
@@ -223,4 +200,32 @@ void FvmApproximator::vtk_save_scalars(std::string filepath, std::map<std::strin
 		ofs << "LOOKUP_TABLE default" << std::endl;
 		for (auto v: *it.second) ofs << v << std::endl;
 	}
+}
+
+double FvmApproximator::calculate_dudn(int btype, const std::vector<double>& v) const{
+	double ret = 0;
+
+	const AGridBoundary& bnd = _grid->boundary(btype);
+	std::vector<int> face_indices = bnd.grid_face_indices();
+
+	for (int iface: face_indices){
+		// i - basis for face
+		int bnd_index = _grid->get_boundary_index_for_face(iface);
+		int i = _grid->n_cells() + bnd_index;
+
+		// j - basis for adjacent cell
+		std::array<int, 2> cells = _grid->tab_face_cell(iface);
+		int icell = std::max(cells[0], cells[1]);
+
+		// hij
+		double hij = cell_to_face_center_normal_distance(icell, iface);
+
+		double uj = v[icell];
+		double ui = v[i];
+		double area = _grid->face_area(iface);
+		double val = (uj - ui)/hij*area;
+		ret -= val;
+	}
+
+	return ret;
 }

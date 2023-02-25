@@ -34,6 +34,7 @@ public:
 	const std::vector<double>& load_vector() const;
 	double integrate(const std::vector<double>& v) const;
 	double domain_volume() const;
+	virtual double calculate_dudn(int btype, const std::vector<double>& v) const;
 
 	// =============== norms
 	virtual double norm_max(const std::vector<double>& v) const;

@@ -270,3 +270,29 @@ std::vector<int> AGrid::vtk_boundary_face_types() const{
 int AGrid::find_cell_index(Point p) const{
 	_THROW_NOT_IMP_;
 }
+
+int AGrid::get_boundary_index_for_face(int iface) const{
+	if (_cache.grid_to_bnd_face.size() == 0){
+		std::vector<int> bfaces = boundary_faces();
+		for (int i=0; i<(int)bfaces.size(); ++i){
+			_cache.grid_to_bnd_face[bfaces[i]] = i;
+		}
+	}
+	auto fnd = _cache.grid_to_bnd_face.find(iface);
+	if (fnd != _cache.grid_to_bnd_face.end()){
+		return fnd->second;
+	} else {
+		throw std::runtime_error("Face " + std::to_string(iface) + " is not boundary");
+	}
+}
+
+std::array<double, 4> AGrid::face_plane(int iface) const{
+	double A, B, C, D;
+	Vector normal = face_normal(iface);
+	Point pk = face_center(iface);
+	A = normal.x;
+	B = normal.y;
+	C = normal.z;
+	D = -(A*pk.x + B*pk.y + C*pk.z);
+	return {A, B, C, D};
+}

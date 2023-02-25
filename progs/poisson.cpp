@@ -222,7 +222,12 @@ void fdm3(){
 
 void fvm2(){
 	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect.vtk"));
-	grid->define_boundary(1, [](Point p)->bool { return true; });
+	grid->define_boundary(1, [](Point p)->bool {
+		if (p.x < 1e-6 && p.y > 0.2 && p.y < 0.8)
+			return true;
+		else
+			return false;
+	});
 
 	// spatial approximator
 	std::shared_ptr<ASpatialApproximator> appr = FvmApproximator::build(grid);
@@ -232,7 +237,7 @@ void fvm2(){
 
 	// bc
 	// Dirichlet
-	slv.set_bc_dirichlet(1, [](Point p)->double{ return exact_solution(p.x); });
+	slv.set_bc_dirichlet(1, [](Point p)->double{ return 1; });
 
 	// rhs
 	std::vector<double> rhs = appr->approximate(rhs_fun);
@@ -256,6 +261,49 @@ void fvm2(){
 	std::cout << grid->n_cells() << " " << error << std::endl;
 }
 
+void fvm2_neumann(){
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect.vtk"));
+	grid->define_boundary(1, [](Point p)->bool {
+		if (p.x < 1e-6 && p.y > 0.5)
+			return true;
+		else
+			return false;
+	});
+	grid->define_boundary(2, [](Point p)->bool {
+		if (p.x > 1 - 1e-6 && p.y < 0.5)
+			return true;
+		else
+			return false;
+	});
+
+	// spatial approximator
+	std::shared_ptr<ASpatialApproximator> appr = FvmApproximator::build(grid);
+
+	// solver: -Laplace(u) = f
+	PoissonSolver slv(appr);
+
+	// bc
+	// Dirichlet
+	slv.set_bc_dirichlet(1, [](Point p)->double{ return 1; });
+	slv.set_bc_dirichlet(2, [](Point p)->double{ return 0; });
+
+	// rhs
+	std::vector<double> rhs(appr->n_bases(), 0.0);
+
+	// solve
+	std::vector<double> x;
+	slv.initialize();
+	slv.solve(rhs, x);
+
+	// show solution
+	appr->vtk_save_scalar(from_output_path("poisson_fvm2.vtk"), x, "data");
+
+	// calculate q
+	double q = appr->calculate_dudn(1, x);
+
+	std::cout << grid->n_cells() << " " << q << std::endl;
+}
+
 int main(){
 	try{
 		//fdm_poisson();
@@ -264,7 +312,8 @@ int main(){
 		//fdm3();
 
 		//fvm_poisson();
-		fvm2();
+		//fvm2();
+		fvm2_neumann();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;

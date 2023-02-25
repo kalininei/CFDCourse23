@@ -82,6 +82,7 @@ public:
 
 	// face btypes for all faces
 	std::vector<int> face_btypes() const;
+	int get_boundary_index_for_face(int iface) const;
 
 	// define boundary
 	void define_boundary(int btype, std::function<bool(Point)> face_center_filter);
@@ -90,6 +91,9 @@ public:
 	// returns index of the cell which contains given point or -1 if point is out
 	// of the grid
 	virtual int find_cell_index(Point p) const;
+
+	// returns A, B, C, D coefficients for plane equation in the form: Ax + By + Cz + D = 0
+	std::array<double, 4> face_plane(int iface) const;
 
 	// vtk converters
 	virtual std::vector<std::vector<int>> vtk_cell_array() const;
@@ -107,6 +111,8 @@ private:
 		std::vector<std::vector<int>> tab_cell_cell;
 		std::vector<int> boundary_faces;
 		std::vector<int> internal_faces;
+		std::map<int, int> grid_to_bnd_face;
+
 		int n_boundary_faces = -1;
 		int n_internal_faces = -1;
 	};
