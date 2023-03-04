@@ -229,3 +229,70 @@ double FvmApproximator::calculate_dudn(int btype, const std::vector<double>& v) 
 
 	return ret;
 }
+
+void FvmApproximator::apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const{
+	const AGridBoundary& bnd = _grid->boundary(ibnd);
+	std::vector<int> ifaces = bnd.grid_face_indices();
+
+	for (int iface: ifaces){
+		int bnd_index = _grid->get_boundary_index_for_face(iface);
+		int ibasis = _grid->n_cells() + bnd_index;
+
+		double q = q_func(_grid->face_center(iface));
+		double area = _grid->face_area(iface);
+
+		rhs[ibasis] -= q*area;
+	};
+}
+
+void FvmApproximator::apply_bc_robin_to_stiff_lhs(
+		int ibnd,
+		std::function<double(Point)> alpha_func,
+		std::vector<double>& stiff) const{
+
+	const AGridBoundary& bnd = _grid->boundary(ibnd);
+	std::vector<int> ifaces = bnd.grid_face_indices();
+	const CsrStencil& s = stencil();
+
+	for (int iface: ifaces){
+		int bnd_index = _grid->get_boundary_index_for_face(iface);
+		int ibasis = _grid->n_cells() + bnd_index;
+
+		double alpha = alpha_func(_grid->face_center(iface));
+		double area = _grid->face_area(iface);
+		
+		int diag_index = s.addr_index(ibasis, ibasis);
+		stiff[diag_index] += area * alpha;
+	};
+}
+
+void FvmApproximator::apply_bc_robin_to_stiff_rhs(
+		int ibnd,
+		std::function<double(Point)> beta_func,
+		std::vector<double>& rhs) const{
+
+	const AGridBoundary& bnd = _grid->boundary(ibnd);
+	std::vector<int> ifaces = bnd.grid_face_indices();
+
+	for (int iface: ifaces){
+		int bnd_index = _grid->get_boundary_index_for_face(iface);
+		int ibasis = _grid->n_cells() + bnd_index;
+
+		double beta = beta_func(_grid->face_center(iface));
+		double area = _grid->face_area(iface);
+		
+		rhs[ibasis] += area * beta;
+	};
+}
+
+void FvmApproximator::apply_point_source(Point p, double flowrate, std::vector<double>& rhs) const{
+	int ibasis = _grid->find_cell_index(p);
+	if (ibasis < 0){
+		throw std::runtime_error(
+			"Failed to find cell for point: "
+			+ std::to_string(p.x) + ", "
+			+ std::to_string(p.y) + ", "
+			+ std::to_string(p.z));
+	}
+	rhs[ibasis] += flowrate;
+}

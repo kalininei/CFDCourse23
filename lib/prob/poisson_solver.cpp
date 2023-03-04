@@ -66,6 +66,11 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 	// right hand side
 	_approximator->stencil().matvec(_rhs_mat, rhs, _slae_rhs);
 
+	// point sources
+	for (std::pair<Point, double>& bc: _bc_point_sources){
+		_approximator->apply_point_source(bc.first, bc.second, _slae_rhs);
+	}
+
 	// neumann values
 	for (auto& it: _bc_neumann){
 		_approximator->apply_bc_neumann_to_stiff(it.first, it.second, _slae_rhs);
@@ -90,4 +95,8 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 // add +eps*u to the equation
 void PoissonSolver::add_linear_term(std::function<double(Point)> alpha){
 	_linear_terms.push_back(alpha);
+}
+
+void PoissonSolver::set_source(Point coo, double flowrate){
+	_bc_point_sources.emplace_back(coo, flowrate);
 }

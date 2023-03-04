@@ -103,6 +103,10 @@ void ASpatialApproximator::apply_bc_robin_to_stiff_rhs(
 	_THROW_NOT_IMP_;
 }
 
+void ASpatialApproximator::apply_point_source(Point p, double flowrate, std::vector<double>& rhs) const{
+	_THROW_NOT_IMP_;
+}
+
 double ASpatialApproximator::integrate(const std::vector<double>& v) const{
 	const std::vector<double>& lv = load_vector();
 	double ret = 0;

@@ -106,7 +106,15 @@ void fvm_poisson(){
 
 	// ==== right side
 	// Dirichlet
-	slv.set_bc_dirichlet(2, exact_solution(1));
+	//slv.set_bc_dirichlet(2, exact_solution(1));
+	
+	//// Neumann
+	//auto q = [](Point p)->double { return -exact_solution_d1(p.x); };
+	//slv.set_bc_neumann(2, q);
+	
+	auto alpha = [](Point)->double { return 1; };
+	auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
+	slv.set_bc_robin(2, alpha, beta);
 
 	// rhs
 	std::vector<double> rhs = appr->approximate(rhs_fun);
@@ -262,7 +270,7 @@ void fvm2(){
 }
 
 void fvm2_neumann(){
-	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("cube.vtk"));
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect.vtk"));
 	grid->define_boundary(1, [](Point p)->bool {
 		if (p.x < 1e-6 && p.y > 0.5)
 			return true;
@@ -286,6 +294,10 @@ void fvm2_neumann(){
 	// Dirichlet
 	slv.set_bc_dirichlet(1, [](Point p)->double{ return 1; });
 	slv.set_bc_dirichlet(2, [](Point p)->double{ return 0; });
+
+	// point source
+	slv.set_source(Point{0.5, 0.5}, 1);
+	slv.set_source(Point{0.3, 0.2}, -1);
 
 	// rhs
 	std::vector<double> rhs(appr->n_bases(), 0.0);

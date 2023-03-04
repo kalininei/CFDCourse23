@@ -74,6 +74,8 @@ public:
 		std::function<double(Point)> beta_func,
 		std::vector<double>& rhs) const;
 
+	virtual void apply_point_source(Point p, double flowrate, std::vector<double>& rhs) const;
+
 	// =============== savers
 	// save single scalar
 	void vtk_save_scalar(std::string filepath, const std::vector<double>& scalar, std::string datacap) const;

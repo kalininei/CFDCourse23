@@ -19,6 +19,18 @@ public:
 	std::vector<double> stiff() const override;
 	double calculate_dudn(int btype, const std::vector<double>& v) const override;
 
+	void apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const override;
+	void apply_bc_robin_to_stiff_lhs(
+		int ibnd,
+		std::function<double(Point)> alpha_func,
+		std::vector<double>& stiff) const override;
+	void apply_bc_robin_to_stiff_rhs(
+		int ibnd,
+		std::function<double(Point)> beta_func,
+		std::vector<double>& rhs) const override;
+
+	void apply_point_source(Point p, double flowrate, std::vector<double>& rhs) const override;
+
 	void vtk_save_scalars(std::string filepath, std::map<std::string, const std::vector<double>*> scalars) const override;
 private:
 	FvmApproximator(std::shared_ptr<AGrid> grid);
