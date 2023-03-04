@@ -262,7 +262,7 @@ void fvm2(){
 }
 
 void fvm2_neumann(){
-	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect.vtk"));
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("cube.vtk"));
 	grid->define_boundary(1, [](Point p)->bool {
 		if (p.x < 1e-6 && p.y > 0.5)
 			return true;

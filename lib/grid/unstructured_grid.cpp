@@ -368,6 +368,35 @@ double cell_volume(const std::vector<Point>& coo, CellCode code){
 	}
 }
 
+bool point_in_triangle(Point p, Point tri1, Point tri2, Point tri3){
+	auto sign = [](Point p1, Point p2, Point p3)->bool{
+		return ((p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)) >= 0;
+	};
+
+	bool s1 = sign(p, tri1, tri2);
+	bool s2 = sign(p, tri2, tri3);
+	bool s3 = sign(p, tri3, tri1);
+
+	return s1 && s2 && s3;
+}
+
+bool point_in_tetrahedron(Point p, Point tet1, Point tet2, Point tet3, Point tet4){
+	auto sign = [](Point p, Point v1, Point v2, Point v3, Point v4)->bool{
+		Vector normal = vector_cross(v2 - v1, v3 - v1);
+		double dotV4 = vector_dot(normal, v4 - v1);
+		double dotP = vector_dot(normal, p - v1);
+		return dotV4 * dotP >= -1e-16;
+	};
+
+	bool s1 = sign(p, tet1, tet2, tet3, tet4);
+	bool s2 = sign(p, tet2, tet3, tet4, tet1);
+	bool s3 = sign(p, tet3, tet4, tet1, tet2);
+	bool s4 = sign(p, tet4, tet1, tet2, tet3);
+
+	return s1 && s2 && s3 && s4;
+}
+
+
 }
 
 
@@ -546,6 +575,10 @@ std::array<int, 2> UnstructuredGrid::tab_face_cell(int iface) const{
 	return {_tab_face_cell[iface].left_cell, _tab_face_cell[iface].right_cell};
 }
 
+std::vector<int> UnstructuredGrid::tab_cell_point(int icell) const{
+	return _cells[icell];
+}
+
 void UnstructuredGrid::vtk_save_cells(std::string fpath) const{
 	std::ofstream ofs(fpath);
 
@@ -638,7 +671,43 @@ void UnstructuredGrid::vtk_save_faces(std::string fpath) const{
 }
 
 bool UnstructuredGrid::point_in_cell(Point p, int icell) const{
-	_THROW_NOT_IMP_;
+	if (dim == 1){
+		return point_in_cell_1d(p, icell);
+	} else if (dim == 2){
+		return point_in_cell_2d(p, icell);
+	} else {
+		return point_in_cell_3d(p, icell);
+	}
+}
+
+bool UnstructuredGrid::point_in_cell_1d(Point p, int icell) const{
+	std::vector<int> cp = tab_cell_point(icell);
+	return (p.x >= _points[cp[0]].x && p.x <= _points[cp[1]].x)
+	       || (p.x >= _points[cp[1]].x && p.x <= _points[cp[0]].x);
+}
+
+bool UnstructuredGrid::point_in_cell_2d(Point p, int icell) const{
+	const std::vector<int>& cell = _cells[icell];
+	// !!! Only for convex polygons
+	Point tri1 = _points[cell[0]];
+	Point tri2, tri3;
+	for (size_t i=1; i<cell.size()-1; ++i){
+		tri2 = _points[cell[i]];
+		tri3 = _points[cell[i+1]];
+		if (point_in_triangle(p, tri1, tri2, tri3)){
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UnstructuredGrid::point_in_cell_3d(Point p, int icell) const{
+	const std::vector<int>& cell = _cells[icell];
+	if (_vtk_cell_codes[icell] == (int)CellCode::TETRAHEDRON){
+		return point_in_tetrahedron(p, _points[cell[0]], _points[cell[1]], _points[cell[2]], _points[cell[3]]);
+	} else {
+		_THROW_NOT_IMP_;
+	}
 }
 
 auto UnstructuredGrid::cell_centers_rtree() const -> rtree_t*{
@@ -665,7 +734,7 @@ int UnstructuredGrid::find_cell_index(Point p) const{
 
 	rtree->query(bg::index::nearest(boost_p, NRET), std::back_inserter(result_n));
 
-	for (auto& pi: result_n){
+	for (const auto& pi: result_n){
 		if (point_in_cell(p, pi.second)){
 			return pi.second;
 		}

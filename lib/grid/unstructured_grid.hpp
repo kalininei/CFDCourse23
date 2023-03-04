@@ -17,6 +17,7 @@ public:
 	double cell_volume(int icell) const override;
 	Vector face_normal(int iface) const override;
 	std::vector<int> tab_face_point(int iface) const override;
+	std::vector<int> tab_cell_point(int iface) const override;
 	std::array<int, 2> tab_face_cell(int iface) const override;
 
 	static std::shared_ptr<UnstructuredGrid> read_from_vtk(std::string fn);
@@ -33,6 +34,9 @@ private:
 
 	rtree_t* cell_centers_rtree() const;
 	bool point_in_cell(Point p, int icell) const;
+	bool point_in_cell_1d(Point p, int icell) const;
+	bool point_in_cell_2d(Point p, int icell) const;
+	bool point_in_cell_3d(Point p, int icell) const;
 
 	// cell-face connection info
 	struct CellFaceEntry{
