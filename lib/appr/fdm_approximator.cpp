@@ -19,7 +19,7 @@ std::map<int, std::vector<std::pair<int, Point>>> FdmApproximator::_build_bounda
 	std::sort(btypes.begin(), btypes.end());
 	std::reverse(btypes.begin(), btypes.end());
 
-	// using std::set to prevent doubling of points in different bc faces
+	// using std::set to prevent duplicating of points in different bc faces
 	std::set<int> used_points;
 
 	for (int btype: btypes){

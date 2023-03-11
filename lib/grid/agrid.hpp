@@ -51,6 +51,10 @@ public:
 	// list of internal faces indices
 	virtual std::vector<int> internal_faces() const;
 
+	// point->point connectivity.
+	// list of points that have common cell with ipoint
+	virtual std::vector<int> tab_point_point(int ipoint) const;
+
 	// face->point connectivity
 	// points are ordered in counter clockwise direction
 	virtual std::vector<int> tab_face_point(int iface) const = 0;
@@ -109,6 +113,7 @@ private:
 		std::vector<std::vector<int>> tab_cell_point;
 		std::vector<std::vector<int>> tab_cell_face;
 		std::vector<std::vector<int>> tab_cell_cell;
+		std::vector<std::vector<int>> tab_point_point;
 		std::vector<int> boundary_faces;
 		std::vector<int> internal_faces;
 		std::map<int, int> grid_to_bnd_face;

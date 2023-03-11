@@ -7,6 +7,12 @@ SET (HEADERS
       appr/fvm_approximator.hpp
       appr/output_fields.hpp
       appr/spatial_approximator.hpp
+      appr/linear_fem_approximator.hpp
+      appr/fe/aelement.hpp
+      appr/fe/linear_segment.hpp
+      appr/fe/linear_triangle.hpp
+      appr/fe/linear_tetrahedron.hpp
+
 
       grid/agrid.hpp
       grid/agrid_boundary.hpp
@@ -30,6 +36,11 @@ SET (SRC
       appr/fdm_approximator.cpp
       appr/fvm_approximator.cpp
       appr/spatial_approximator.cpp
+      appr/linear_fem_approximator.cpp
+      appr/fe/aelement.cpp
+      appr/fe/linear_segment.cpp
+      appr/fe/linear_triangle.cpp
+      appr/fe/linear_tetrahedron.cpp
 
       grid/agrid.cpp
       grid/agrid_boundary.cpp

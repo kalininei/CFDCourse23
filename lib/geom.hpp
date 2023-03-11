@@ -53,7 +53,7 @@ inline Point operator/(const Point& p, double c){
 }
 
 inline std::ostream& operator<<(std::ostream& s, const Point& p){
-	s << "(" << p.x << ", " << p.y << ", " << p.z << ")" << std::endl;
+	s << "(" << p.x << ", " << p.y << ", " << p.z << ")";
 	return s;
 }
 

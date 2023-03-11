@@ -2,7 +2,7 @@
 #define FVM_APPROXIMATION_HPP
 
 #include "common.hpp"
-#include "grid/regular_grid.hpp"
+#include "grid/agrid.hpp"
 #include "appr/spatial_approximator.hpp"
 
 class FvmApproximator: public ASpatialApproximator{

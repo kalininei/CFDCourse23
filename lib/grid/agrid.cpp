@@ -104,6 +104,27 @@ std::vector<int> AGrid::tab_cell_cell(int icell) const{
 	return _cache.tab_cell_cell[icell];
 }
 
+std::vector<int> AGrid::tab_point_point(int ipoint) const{
+	if (_cache.tab_point_point.empty()){
+		std::vector<std::set<int>> pp(n_points());
+
+		for (int icell=0; icell<n_cells(); ++icell){
+			std::vector<int> cp = tab_cell_point(icell);
+			for (int ipoint: cp){
+				pp[ipoint].insert(cp.begin(), cp.end());
+			}
+		}
+
+		for (int ipoint=0; ipoint<n_points(); ++ipoint){
+			std::set<int>& s = pp[ipoint];
+			s.erase(ipoint);
+			_cache.tab_point_point.emplace_back(s.begin(), s.end());
+		}
+	}
+
+	return _cache.tab_point_point[ipoint];
+}
+
 int AGrid::n_boundary_faces() const{
 	if (_cache.n_boundary_faces < 0){
 		_cache.n_boundary_faces = 0;
