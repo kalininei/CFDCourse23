@@ -67,7 +67,7 @@ void linear1(){
 
 void linear2(){
 	// grid
-	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect1.vtk"));
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect.vtk"));
 	grid->define_boundary(1, [](Point p)->bool {
 		if (p.x < 1e-6)
 			return true;
@@ -164,9 +164,9 @@ void linear3(){
 
 int main(){
 	try{
-		linear1();
+		//linear1();
 		//linear2();
-		//linear3();
+		linear3();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;

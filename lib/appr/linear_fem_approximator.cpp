@@ -5,6 +5,7 @@
 #include "fe/linear_segment.hpp"
 #include "fe/linear_triangle.hpp"
 #include "fe/linear_tetrahedron.hpp"
+#include "debug.hpp"
 
 std::shared_ptr<LinearFemApproximator> LinearFemApproximator::build(std::shared_ptr<AGrid> grid){
 	return std::shared_ptr<LinearFemApproximator>(new LinearFemApproximator(grid));
@@ -21,7 +22,7 @@ LinearFemApproximator::LinearFemApproximator(std::shared_ptr<AGrid> grid): _grid
 }
 
 int LinearFemApproximator::n_bases() const {
-	_THROW_NOT_IMP_;
+	return _grid->n_points();
 }
 
 int LinearFemApproximator::n_elements() const {
@@ -51,15 +52,58 @@ CsrStencil LinearFemApproximator::_build_stencil() const{
 }
 
 std::vector<double> LinearFemApproximator::mass() const{
-	_THROW_NOT_IMP_;
+	const CsrStencil& s = stencil();
+	std::vector<double> ret(s.n_nonzero(), 0);
+
+	for (std::shared_ptr<AElement> el: _elements){
+		std::vector<double> local_mass = el->mass();
+		for (int j=0; j<el->n_bases(); ++j){
+			for (int i=0; i<el->n_bases(); ++i){
+				double v = local_mass[j*el->n_bases() + i];
+				int irow = el->i_basis(j);
+				int icol = el->i_basis(i);
+				int ind = s.addr_index(irow, icol);
+				ret[ind] += v;
+			}
+		}
+	}
+
+	return ret;
 }
 
 std::vector<double> LinearFemApproximator::stiff() const{
-	_THROW_NOT_IMP_;
+	const CsrStencil& s = stencil();
+	std::vector<double> ret(s.n_nonzero(), 0);
+
+	for (std::shared_ptr<AElement> el: _elements){
+		std::vector<double> local_stiff = el->stiff();
+		for (int j=0; j<el->n_bases(); ++j){
+			for (int i=0; i<el->n_bases(); ++i){
+				double v = local_stiff[j*el->n_bases() + i];
+				int irow = el->i_basis(j);
+				int icol = el->i_basis(i);
+				int ind = s.addr_index(irow, icol);
+				ret[ind] += v;
+			}
+		}
+	}
+
+	return ret;
 }
 
 std::vector<double> LinearFemApproximator::_build_load_vector() const{
-	_THROW_NOT_IMP_;
+	std::vector<double> ret(n_bases(), 0);
+
+	for (std::shared_ptr<AElement> el: _elements){
+		std::vector<double> local_vec = el->load();
+		for (int j=0; j<el->n_bases(); ++j){
+			double v = local_vec[j];
+			int ind = el->i_basis(j);
+			ret[ind] += v;
+		}
+	}
+
+	return ret;
 }
 
 void LinearFemApproximator::apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const{
