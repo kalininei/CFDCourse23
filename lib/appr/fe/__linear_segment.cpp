@@ -4,15 +4,16 @@ LinearSegmentElement::LinearSegmentElement(const std::vector<int>& nbases, const
 	: AElement(nbases, coo), _len((coo[1] - coo[0]).x){}
 
 std::vector<double> LinearSegmentElement::mass() const{
-	_THROW_NOT_IMP_;
+	return {_len/3, _len/6, _len/6, _len/3};
 }
 
 std::vector<double> LinearSegmentElement::stiff() const{
-	_THROW_NOT_IMP_;
+	double v = 1/_len;
+	return {v, -v, -v, v};
 }
 
 std::vector<double> LinearSegmentElement::load() const{
-	_THROW_NOT_IMP_;
+	return {_len/2, _len/2};
 }
 
 LinearSegmentBoundaryElement::LinearSegmentBoundaryElement(const std::vector<int>& nbases, const std::vector<Point>& coo)

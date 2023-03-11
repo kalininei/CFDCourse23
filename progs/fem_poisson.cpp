@@ -39,13 +39,9 @@ void linear1(){
 	PoissonSolver slv(appr);
 
 	// bc
-	// ==== Left side
 	slv.set_bc_dirichlet(1, exact_solution(0));
-	//slv.set_bc_neumann(1, -exact_solution_d1(0));
-
-	// ==== right side
-	//slv.set_bc_dirichlet(2, exact_solution(1));
-	slv.set_bc_neumann(2, exact_solution_d1(1));
+	slv.set_bc_dirichlet(2, exact_solution(1));
+	// slv.set_bc_neumann(2, -exact_solution_d1(1));
 	
 	// rhs
 	std::vector<double> rhs = appr->approximate(rhs_fun);
@@ -93,7 +89,6 @@ void linear2(){
 
 	// bc
 	slv.set_bc_dirichlet(1, [](const Point& p)->double{ return exact_solution(p.x); });
-	//slv.set_bc_neumann(1, [](const Point& p)->double{ return -exact_solution_d1(p.x); });
 	slv.set_bc_dirichlet(2, [](const Point& p)->double{ return exact_solution(p.x); });
 	//slv.set_bc_neumann(2, [](const Point& p)->double{ return exact_solution_d1(p.x); });
 	
@@ -122,19 +117,18 @@ void linear2(){
 void linear3(){
 	// grid
 	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("cube.vtk"));
-	grid->define_boundary(1, [](Point p)->bool { return true; });
-	//grid->define_boundary(1, [](Point p)->bool {
-	//        if (p.x < 1e-6)
-	//                return true;
-	//        else
-	//                return false;
-	//});
-	//grid->define_boundary(2, [](Point p)->bool {
-	//        if (p.x > 1 - 1e-6)
-	//                return true;
-	//        else
-	//                return false;
-	//});
+	grid->define_boundary(1, [](Point p)->bool {
+		if (p.x < 1e-6)
+			return true;
+		else
+			return false;
+	});
+	grid->define_boundary(2, [](Point p)->bool {
+		if (p.x > 1 - 1e-6)
+			return true;
+		else
+			return false;
+	});
 
 	// spatial approximator
 	std::shared_ptr<LinearFemApproximator> appr = LinearFemApproximator::build(grid);
@@ -144,7 +138,7 @@ void linear3(){
 
 	// bc
 	slv.set_bc_dirichlet(1, [](const Point& p)->double{ return exact_solution(p.x); });
-	//slv.set_bc_dirichlet(2, [](const Point& p)->double{ return exact_solution(p.x); });
+	slv.set_bc_dirichlet(2, [](const Point& p)->double{ return exact_solution(p.x); });
 	
 	// rhs
 	std::vector<double> rhs = appr->approximate(rhs_fun);
@@ -170,9 +164,9 @@ void linear3(){
 
 int main(){
 	try{
-		//linear1();
+		linear1();
 		//linear2();
-		linear3();
+		//linear3();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;
