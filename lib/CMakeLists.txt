@@ -8,10 +8,13 @@ SET (HEADERS
       appr/output_fields.hpp
       appr/spatial_approximator.hpp
       appr/linear_fem_approximator.hpp
+      appr/fe/fe_quadrature.hpp
       appr/fe/aelement.hpp
+      appr/fe/anum_element.cpp
       appr/fe/linear_segment.hpp
       appr/fe/linear_triangle.hpp
       appr/fe/linear_tetrahedron.hpp
+      appr/fe/bilinear_quadrangle.hpp
 
 
       grid/agrid.hpp
@@ -28,6 +31,7 @@ SET (HEADERS
 
       slae/csrmat.hpp
       slae/matrix_solver.hpp
+      slae/dense_mat.hpp
 )
 
 SET (SRC
@@ -37,10 +41,13 @@ SET (SRC
       appr/fvm_approximator.cpp
       appr/spatial_approximator.cpp
       appr/linear_fem_approximator.cpp
+      appr/fe/fe_quadrature.cpp
       appr/fe/aelement.cpp
+      appr/fe/anum_element.cpp
       appr/fe/linear_segment.cpp
       appr/fe/linear_triangle.cpp
       appr/fe/linear_tetrahedron.cpp
+      appr/fe/bilinear_quadrangle.cpp
 
       grid/agrid.cpp
       grid/agrid_boundary.cpp
@@ -56,8 +63,7 @@ SET (SRC
 
       slae/matrix_solver.cpp
       slae/csrmat.cpp
-
-
+      slae/dense_mat.cpp
 )
 
 

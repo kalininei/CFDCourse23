@@ -126,8 +126,8 @@ std::array<int, 3> ARegularGrid::cell_glob_to_ijk(int icell) const{
 
 	ret[2] = icell / ((nx()-1) * (ny()-1));
 	icell -= ret[2] * (nx()-1) * (ny()-1);
-	ret[1] = icell / (ny()-1);
-	ret[0] = icell - (ny()-1);
+	ret[1] = icell / (nx()-1);
+	ret[0] = icell % (nx()-1);
 
 	return ret;
 }
@@ -248,6 +248,33 @@ std::array<int, 4> RegularGrid3::face_glob_to_ijk(int iface) const{
 		return {iface, iy, iz, 2};
 	}
 }
+
+std::vector<int> RegularGrid1::tab_cell_point(int icell) const {
+	return {icell, icell+1};
+}
+
+std::vector<int> RegularGrid2::tab_cell_point(int icell) const {
+	std::array<int, 3> ijk = cell_glob_to_ijk(icell);
+	return {
+		point_ijk_to_glob(ijk[0], ijk[1], 0),
+		point_ijk_to_glob(ijk[0]+1, ijk[1], 0),
+		point_ijk_to_glob(ijk[0]+1, ijk[1]+1, 0),
+		point_ijk_to_glob(ijk[0], ijk[1]+1, 0)};
+}
+
+std::vector<int> RegularGrid3::tab_cell_point(int icell) const {
+	std::array<int, 3> ijk = cell_glob_to_ijk(icell);
+	return {
+		point_ijk_to_glob(ijk[0], ijk[1], ijk[2]),
+		point_ijk_to_glob(ijk[0]+1, ijk[1], ijk[2]),
+		point_ijk_to_glob(ijk[0]+1, ijk[1]+1, ijk[2]),
+		point_ijk_to_glob(ijk[0], ijk[1]+1, ijk[2]),
+		point_ijk_to_glob(ijk[0], ijk[1], ijk[2]+1),
+		point_ijk_to_glob(ijk[0]+1, ijk[1], ijk[2]+1),
+		point_ijk_to_glob(ijk[0]+1, ijk[1]+1, ijk[2]+1),
+		point_ijk_to_glob(ijk[0], ijk[1]+1, ijk[2]+1)};
+}
+
 
 std::vector<int> RegularGrid1::tab_face_point(int iface) const {
 	return {iface};

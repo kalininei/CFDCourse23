@@ -78,6 +78,7 @@ public:
 	Vector face_normal(int iface) const override;
 	std::vector<int> tab_face_point(int iface) const override;
 	std::array<int, 2> tab_face_cell(int iface) const override;
+	std::vector<int> tab_cell_point(int icell) const override;
 	int face_ijk_to_glob(int ix, int iy, int iz, int idir) const override;
 	std::array<int, 4> face_glob_to_ijk(int face) const override;
 };
@@ -95,6 +96,7 @@ public:
 	Vector face_normal(int iface) const override;
 	std::vector<int> tab_face_point(int iface) const override;
 	std::array<int, 2> tab_face_cell(int iface) const override;
+	std::vector<int> tab_cell_point(int icell) const override;
 	int face_ijk_to_glob(int ix, int iy, int iz, int idir) const override;
 	std::array<int, 4> face_glob_to_ijk(int face) const override;
 };
@@ -117,6 +119,7 @@ public:
 	Vector face_normal(int iface) const override;
 	std::vector<int> tab_face_point(int iface) const override;
 	std::array<int, 2> tab_face_cell(int iface) const override;
+	std::vector<int> tab_cell_point(int icell) const override;
 	int face_ijk_to_glob(int ix, int iy, int iz, int idir) const override;
 	std::array<int, 4> face_glob_to_ijk(int face) const override;
 };

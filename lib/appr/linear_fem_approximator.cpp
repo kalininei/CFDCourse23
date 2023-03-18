@@ -5,6 +5,7 @@
 #include "fe/linear_segment.hpp"
 #include "fe/linear_triangle.hpp"
 #include "fe/linear_tetrahedron.hpp"
+#include "fe/bilinear_quadrangle.hpp"
 #include "debug.hpp"
 
 std::shared_ptr<LinearFemApproximator> LinearFemApproximator::build(std::shared_ptr<AGrid> grid){
@@ -150,6 +151,8 @@ AElement* LinearFemApproximator::build_element(int icell){
 	} else if (_grid->dim==2){
 		if (cp.size() == 3){
 			return new LinearTriangleElement(cp, points);
+		} else if (cp.size() == 4){
+			return new BilinearQuadrangleElement(cp, points);
 		}
 	} else if (_grid->dim==3){
 		if (cp.size() == 4){

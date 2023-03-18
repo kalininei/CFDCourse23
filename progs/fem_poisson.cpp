@@ -25,7 +25,7 @@ double rhs_fun(Point p){
 
 
 void linear1(){
-	int n_cells = 100;
+	int n_cells = 10;
 
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
@@ -162,11 +162,62 @@ void linear3(){
 	std::cout << grid->n_cells() << " " << error << std::endl;
 };
 
+void bilinear2(){
+	// grid
+	//int ndim = 10;
+	//std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(ndim + 1, 1, ndim + 1, 1);
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect_4_4.vtk"));
+	grid->define_boundary(1, [](Point p)->bool {
+		if (p.x < 1e-6)
+			return true;
+		else
+			return false;
+	});
+	grid->define_boundary(2, [](Point p)->bool {
+		if (p.x > 1 - 1e-6)
+			return true;
+		else
+			return false;
+	});
+
+	// spatial approximator
+	std::shared_ptr<LinearFemApproximator> appr = LinearFemApproximator::build(grid);
+
+	// solver: -Laplace(u) = f
+	PoissonSolver slv(appr);
+
+	// bc
+	slv.set_bc_dirichlet(1, [](const Point& p)->double{ return exact_solution(p.x); });
+	slv.set_bc_dirichlet(2, [](const Point& p)->double{ return exact_solution(p.x); });
+	
+	// rhs
+	std::vector<double> rhs = appr->approximate(rhs_fun);
+
+	// solve
+	std::vector<double> x;
+	slv.initialize();
+	slv.solve(rhs, x);
+
+	// show solution
+	appr->vtk_save_scalar(from_output_path("poisson_fem2.vtk"), x, "data");
+
+	// calculate norm
+	std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
+	std::vector<double> diff(x.size());
+	for (size_t i=0; i<x.size(); ++i) {
+		diff[i] = x[i] - appr_exact[i];
+	}
+
+	double error = appr->norm_2(diff);
+	std::cout << grid->n_cells() << " " << error << std::endl;
+};
+
 int main(){
 	try{
 		//linear1();
-		//linear2();
-		linear3();
+		linear2();
+		//linear3();
+		//bilinear2();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;
