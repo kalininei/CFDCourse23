@@ -15,6 +15,7 @@ SET (HEADERS
       appr/fe/linear_triangle.hpp
       appr/fe/linear_tetrahedron.hpp
       appr/fe/bilinear_quadrangle.hpp
+      appr/fe/linear_buble_triangle.hpp
 
 
       grid/agrid.hpp
@@ -48,6 +49,7 @@ SET (SRC
       appr/fe/linear_triangle.cpp
       appr/fe/linear_tetrahedron.cpp
       appr/fe/bilinear_quadrangle.cpp
+      appr/fe/linear_buble_triangle.cpp
 
       grid/agrid.cpp
       grid/agrid_boundary.cpp
