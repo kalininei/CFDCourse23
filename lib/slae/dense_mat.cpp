@@ -2,26 +2,11 @@
 #include <cmath>
 
 std::vector<double> dense_from_lower(const std::vector<double>& lower){
-	int N = int((-1 + sqrt(8*lower.size() + 1))/2);
-	std::vector<double> ret(N*N, 0);
-
-	int k = 0;
-	for (int j=0; j<N; ++j){
-		for (int i=0; i<j; ++i){
-			ret[N*j + i] = lower[k];
-			ret[N*i + j] = lower[k];
-			k++;
-		}
-		ret[N*j + j] = lower[k];
-		k++;
-	}
-	return ret;
+	_THROW_NOT_IMP_;
 }
 
 double determinant3(const std::array<double, 9>& mat){
-	return mat[0]*(mat[4]*mat[8]-mat[5]*mat[7])
-		-mat[1]*(mat[3]*mat[8]-mat[5]*mat[6])
-		+mat[2]*(mat[3]*mat[7]-mat[4]*mat[6]);
+	_THROW_NOT_IMP_;
 }
 
 std::array<double, 9> det_transpose_invert3(const std::array<double, 9>& a){
