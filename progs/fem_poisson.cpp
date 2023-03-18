@@ -40,8 +40,12 @@ void linear1(){
 
 	// bc
 	slv.set_bc_dirichlet(1, exact_solution(0));
-	slv.set_bc_dirichlet(2, exact_solution(1));
-	// slv.set_bc_neumann(2, -exact_solution_d1(1));
+	//slv.set_bc_dirichlet(2, exact_solution(1));
+	//slv.set_bc_neumann(2, -exact_solution_d1(1));
+
+	auto alpha = [](Point)->double { return 1; };
+	auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
+	slv.set_bc_robin(2, alpha, beta);
 	
 	// rhs
 	std::vector<double> rhs = appr->approximate(rhs_fun);
@@ -166,7 +170,7 @@ void bilinear2(){
 	// grid
 	//int ndim = 10;
 	//std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(ndim + 1, 1, ndim + 1, 1);
-	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect_4_4.vtk"));
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect_4.vtk"));
 	grid->define_boundary(1, [](Point p)->bool {
 		if (p.x < 1e-6)
 			return true;
@@ -215,9 +219,9 @@ void bilinear2(){
 int main(){
 	try{
 		//linear1();
-		linear2();
+		//linear2();
 		//linear3();
-		//bilinear2();
+		bilinear2();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;

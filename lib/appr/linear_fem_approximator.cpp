@@ -108,7 +108,21 @@ std::vector<double> LinearFemApproximator::_build_load_vector() const{
 }
 
 void LinearFemApproximator::apply_bc_neumann_to_stiff(int ibnd, std::function<double(Point)> q_func, std::vector<double>& rhs) const{
-	_THROW_NOT_IMP_;
+	const AGridBoundary& bnd = _grid->boundary(ibnd);
+	std::vector<int> ifaces = bnd.grid_face_indices();
+	for (int iface: ifaces){
+		const std::shared_ptr<AElement>& el = _boundary_elements.find(iface)->second;
+		std::vector<double> local_mass_mat = el->mass();
+		std::vector<double> local_mass_vec(el->n_bases(), 0);
+		for (int irow=0; irow<el->n_bases(); ++irow){
+			for (int icol=0; icol<el->n_bases(); ++icol){
+				double v_icol = q_func(_grid->point(el->i_basis(icol)));
+				local_mass_vec[irow] -= local_mass_mat[irow*el->n_bases() + icol] * v_icol;
+			}
+		}
+
+		add_local_vector(1, local_mass_vec, el.get(), rhs);
+	}
 }
 
 void LinearFemApproximator::apply_bc_robin_to_stiff_lhs(
@@ -116,7 +130,15 @@ void LinearFemApproximator::apply_bc_robin_to_stiff_lhs(
 		std::function<double(Point)> alpha_func,
 		std::vector<double>& stiff) const {
 
-	_THROW_NOT_IMP_;
+	const AGridBoundary& bnd = _grid->boundary(ibnd);
+	std::vector<int> ifaces = bnd.grid_face_indices();
+	for (int iface: ifaces){
+		const std::shared_ptr<AElement>& el = _boundary_elements.find(iface)->second;
+		std::vector<double> local_mass_mat = el->mass();
+		double alpha_e = alpha_func(_grid->face_center(iface));
+		add_local_matrix(alpha_e, local_mass_mat, el.get(), stiff);
+	}
+	dbg::print(stencil(), stiff);
 }
 
 void LinearFemApproximator::apply_bc_robin_to_stiff_rhs(
@@ -124,16 +146,29 @@ void LinearFemApproximator::apply_bc_robin_to_stiff_rhs(
 		std::function<double(Point)> beta_func,
 		std::vector<double>& rhs) const {
 
-	_THROW_NOT_IMP_;
+	auto minus_beta = [&](Point p){return -beta_func(p); };
+	apply_bc_neumann_to_stiff(ibnd, minus_beta, rhs);
 }
 
 
 void LinearFemApproximator::add_local_matrix(double coef, const std::vector<double>& lmat, const AElement* elem, std::vector<double>& gmat) const{
-	_THROW_NOT_IMP_;
+	const CsrStencil& s = stencil();
+	for (int j=0; j<elem->n_bases(); ++j){
+		int gj = elem->i_basis(j);
+		for (int i=0; i<elem->n_bases(); ++i){
+			int gi = elem->i_basis(i);
+			double v = lmat[j*elem->n_bases() + i];
+			int plain_index = s.addr_index(gj, gi);
+			gmat[plain_index] += coef * v;
+		}
+	}
 }
 
 void LinearFemApproximator::add_local_vector(double coef, const std::vector<double>& lvec, const AElement* elem, std::vector<double>& gvec) const{
-	_THROW_NOT_IMP_;
+	for (int i=0; i<elem->n_bases(); ++i){
+		int gi = elem->i_basis(i);
+		gvec[gi] += coef*lvec[i];
+	}
 }
 
 AElement* LinearFemApproximator::build_element(int icell){
