@@ -24,7 +24,6 @@ public:
 
 	// shifted point coordinate. First is always 0
 	Point point(int ilocal) const;
-
 private:
 	const std::vector<int> _bases;
 	const std::vector<Point> _coo;

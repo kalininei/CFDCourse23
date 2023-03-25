@@ -59,7 +59,7 @@ void PoissonSolver::initialize(){
 
 	_slae_solver->set_matrix(_approximator->stencil(), diffmat);
 
-	std::cout << "Poisson solver initialized" << std::endl;
+	//std::cout << "Poisson solver initialized" << std::endl;
 }
 
 void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u){
@@ -89,7 +89,7 @@ void PoissonSolver::solve(const std::vector<double>& rhs, std::vector<double>& u
 	// solve
 	_slae_solver->solve(_slae_rhs, u);
 
-	std::cout << "Poisson solution obtained" << std::endl;
+	//std::cout << "Poisson solution obtained" << std::endl;
 }
 
 // add +eps*u to the equation

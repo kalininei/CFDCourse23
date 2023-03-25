@@ -1,6 +1,8 @@
 #include <iostream>
 #include "prog_common.hpp"
 #include "appr/linear_fem_approximator.hpp"
+#include "appr/quadratic_fem_approximator.hpp"
+#include "appr/cubic_fem_approximator.hpp"
 #include "grid/regular_grid.hpp"
 #include "grid/unstructured_grid.hpp"
 #include "prob/poisson_solver.hpp"
@@ -25,53 +27,55 @@ double rhs_fun(Point p){
 
 
 void linear1(){
-	int n_cells = 10;
+	//int n_cells = 10;
 
-	// grid
-	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
-	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
-	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
+	for (int n_cells: {10, 20, 50, 100, 200, 500, 1000}){
+		// grid
+		std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
+		grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+		grid->define_reg_boundary(2, DirectionCode::X_PLUS);
 
-	// spatial approximator
-	std::shared_ptr<LinearFemApproximator> appr = LinearFemApproximator::build(grid);
+		// spatial approximator
+		std::shared_ptr<LinearFemApproximator> appr = LinearFemApproximator::build(grid);
 
-	// solver: -Laplace(u) = f
-	PoissonSolver slv(appr);
+		// solver: -Laplace(u) = f
+		PoissonSolver slv(appr);
 
-	// bc
-	slv.set_bc_dirichlet(1, exact_solution(0));
-	//slv.set_bc_dirichlet(2, exact_solution(1));
-	//slv.set_bc_neumann(2, -exact_solution_d1(1));
+		// bc
+		slv.set_bc_dirichlet(1, exact_solution(0));
+		slv.set_bc_dirichlet(2, exact_solution(1));
+		//slv.set_bc_neumann(2, -exact_solution_d1(1));
 
-	auto alpha = [](Point)->double { return 1; };
-	auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
-	slv.set_bc_robin(2, alpha, beta);
-	
-	// rhs
-	std::vector<double> rhs = appr->approximate(rhs_fun);
+		//auto alpha = [](Point)->double { return 1; };
+		//auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
+		//slv.set_bc_robin(2, alpha, beta);
+		
+		// rhs
+		std::vector<double> rhs = appr->approximate(rhs_fun);
 
-	// solve
-	std::vector<double> x;
-	slv.initialize();
-	slv.solve(rhs, x);
+		// solve
+		std::vector<double> x;
+		slv.initialize();
+		slv.solve(rhs, x);
 
-	// show solution
-	appr->vtk_save_scalar(from_output_path("poisson_fem1.vtk"), x, "data");
+		// show solution
+		appr->vtk_save_scalar(from_output_path("poisson_fem1.vtk"), x, "data");
 
-	// calculate norm
-	std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
-	std::vector<double> diff(x.size());
-	for (size_t i=0; i<x.size(); ++i) {
-		diff[i] = x[i] - appr_exact[i];
+		// calculate norm
+		std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
+		std::vector<double> diff(x.size());
+		for (size_t i=0; i<x.size(); ++i) {
+			diff[i] = x[i] - appr_exact[i];
+		}
+
+		double error = appr->norm_2(diff);
+		std::cout << n_cells << " " << error << std::endl;
 	}
-
-	double error = appr->norm_2(diff);
-	std::cout << n_cells << " " << error << std::endl;
 };
 
 void linear2(){
 	// grid
-	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect.vtk"));
+	std::shared_ptr<UnstructuredGrid> grid = UnstructuredGrid::read_from_vtk(from_input_path("rect_3_1.vtk"));
 	grid->define_boundary(1, [](Point p)->bool {
 		if (p.x < 1e-6)
 			return true;
@@ -216,12 +220,104 @@ void bilinear2(){
 	std::cout << grid->n_cells() << " " << error << std::endl;
 };
 
+void quadratic1(){
+	int n_cells = 1000;
+
+	// grid
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
+
+	// spatial approximator
+	std::shared_ptr<QuadraticFemApproximator> appr = QuadraticFemApproximator::build(grid);
+
+	// solver: -Laplace(u) = f
+	PoissonSolver slv(appr);
+
+	// bc
+	slv.set_bc_dirichlet(1, exact_solution(0));
+	slv.set_bc_dirichlet(2, exact_solution(1));
+	//slv.set_bc_neumann(2, -exact_solution_d1(1));
+
+	//auto alpha = [](Point)->double { return 1; };
+	//auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
+	//slv.set_bc_robin(2, alpha, beta);
+	
+	// rhs
+	std::vector<double> rhs = appr->approximate(rhs_fun);
+
+	// solve
+	std::vector<double> x;
+	slv.initialize();
+	slv.solve(rhs, x);
+
+	// show solution
+	appr->vtk_save_scalar(from_output_path("poisson_fem1.vtk"), x, "data");
+
+	// calculate norm
+	std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
+	std::vector<double> diff(x.size());
+	for (size_t i=0; i<x.size(); ++i) {
+		diff[i] = x[i] - appr_exact[i];
+	}
+
+	double error = appr->norm_2(diff);
+	std::cout << n_cells << " " << error << std::endl;
+};
+
+void cubic1(){
+	int n_cells = 10;
+
+	// grid
+	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
+	grid->define_reg_boundary(1, DirectionCode::X_MINUS);
+	grid->define_reg_boundary(2, DirectionCode::X_PLUS);
+
+	// spatial approximator
+	std::shared_ptr<CubicFemApproximator> appr = CubicFemApproximator::build(grid);
+
+	// solver: -Laplace(u) = f
+	PoissonSolver slv(appr);
+
+	// bc
+	slv.set_bc_dirichlet(1, exact_solution(0));
+	slv.set_bc_dirichlet(2, exact_solution(1));
+	//slv.set_bc_neumann(2, -exact_solution_d1(1));
+
+	//auto alpha = [](Point)->double { return 1; };
+	//auto beta = [](Point p)->double { return exact_solution(p.x) + exact_solution_d1(p.x); };
+	//slv.set_bc_robin(2, alpha, beta);
+	
+	// rhs
+	std::vector<double> rhs = appr->approximate(rhs_fun);
+
+	// solve
+	std::vector<double> x;
+	slv.initialize();
+	slv.solve(rhs, x);
+
+	// show solution
+	appr->vtk_save_scalar(from_output_path("poisson_fem1.vtk"), x, "data");
+
+	// calculate norm
+	std::vector<double> appr_exact = appr->approximate([](Point p){ return exact_solution(p.x); });
+	std::vector<double> diff(x.size());
+	for (size_t i=0; i<x.size(); ++i) {
+		diff[i] = x[i] - appr_exact[i];
+	}
+
+	double error = appr->norm_2(diff);
+	std::cout << n_cells << " " << error << std::endl;
+};
+
 int main(){
 	try{
 		//linear1();
 		//linear2();
 		//linear3();
-		bilinear2();
+		//bilinear2();
+		quadratic1();
+		//cubic1();
 		std::cout << "DONE" << std::endl;
 	} catch (std::exception& e){
 		std::cout << "ERROR: " << " " << e.what() << std::endl;

@@ -7,16 +7,21 @@ SET (HEADERS
       appr/fvm_approximator.hpp
       appr/output_fields.hpp
       appr/spatial_approximator.hpp
+      appr/anodal_fem_approximator.hpp
       appr/linear_fem_approximator.hpp
+      appr/quadratic_fem_approximator.hpp
+      appr/cubic_fem_approximator.hpp
       appr/fe/fe_quadrature.hpp
       appr/fe/aelement.hpp
       appr/fe/anum_element.cpp
       appr/fe/linear_segment.hpp
+      appr/fe/quadratic_segment.hpp
+      appr/fe/cubic_segment.hpp
       appr/fe/linear_triangle.hpp
       appr/fe/linear_tetrahedron.hpp
       appr/fe/bilinear_quadrangle.hpp
-      appr/fe/linear_buble_triangle.hpp
-
+      appr/fe/linear_bubble_triangle.hpp
+      appr/fe/quadratic_segment.hpp
 
       grid/agrid.hpp
       grid/agrid_boundary.hpp
@@ -41,15 +46,21 @@ SET (SRC
       appr/fdm_approximator.cpp
       appr/fvm_approximator.cpp
       appr/spatial_approximator.cpp
+      appr/anodal_fem_approximator.cpp
       appr/linear_fem_approximator.cpp
+      appr/quadratic_fem_approximator.cpp
+      appr/cubic_fem_approximator.cpp
       appr/fe/fe_quadrature.cpp
       appr/fe/aelement.cpp
       appr/fe/anum_element.cpp
       appr/fe/linear_segment.cpp
+      appr/fe/quadratic_segment.cpp
+      appr/fe/cubic_segment.cpp
       appr/fe/linear_triangle.cpp
       appr/fe/linear_tetrahedron.cpp
       appr/fe/bilinear_quadrangle.cpp
-      appr/fe/linear_buble_triangle.cpp
+      appr/fe/linear_bubble_triangle.cpp
+      appr/fe/quadratic_segment.cpp
 
       grid/agrid.cpp
       grid/agrid_boundary.cpp

@@ -6,6 +6,8 @@
 struct Point{
 	double x=0, y=0, z=0;
 
+	Point(double x=0, double y=0, double z=0): x(x), y(y), z(z){}
+
 	Point& operator+=(const Point& p){
 		x += p.x;
 		y += p.y;

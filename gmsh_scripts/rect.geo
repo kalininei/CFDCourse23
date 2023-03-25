@@ -1,5 +1,5 @@
 // grid size
-lc = 1e-1;
+lc = 0.5e-2;
 // rectangle sizes
 w = 1.0;
 h = 1.0;
@@ -19,4 +19,4 @@ Curve Loop(1) = {1, 2, 3, 4};
 Plane Surface(1) = {1};
 
 Mesh 2;
-Save "rect.vtk";
+Save "rect_3_6.vtk";
