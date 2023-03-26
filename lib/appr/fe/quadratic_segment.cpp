@@ -11,15 +11,30 @@ QuadraticSegmentElement::QuadraticSegmentElement(const std::vector<int>& nbases,
 
 
 std::array<double, 9> QuadraticSegmentElement::jacobi_matrix(Point p) const{
-	_THROW_NOT_IMP_;
+	double len = point(1).x;
+	return {
+		len/2, 0, 0,
+		0,     1, 0,
+		0,     0, 1
+	};
 }
 
 std::vector<double> QuadraticSegmentElement::bases(Point p) const{
-	_THROW_NOT_IMP_;
+	double xi = p.x;
+	return {
+		(-xi + xi*xi)/2,
+		(xi + xi*xi)/2,
+		1 - xi*xi
+	};
 }
 
 std::vector<Point> QuadraticSegmentElement::grad_bases(Point p) const{
-	_THROW_NOT_IMP_;
+	double xi = p.x;
+	return{
+		Point(-0.5 + xi, 0, 0),
+		Point(0.5 + xi, 0, 0),
+		Point(-2*xi, 0, 0)
+	};
 }
 
 QuadraticSegmentBoundaryElement::QuadraticSegmentBoundaryElement(const std::vector<int>& nbases, const std::vector<Point>& coo)

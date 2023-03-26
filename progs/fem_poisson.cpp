@@ -221,7 +221,7 @@ void bilinear2(){
 };
 
 void quadratic1(){
-	int n_cells = 1000;
+	int n_cells = 10;
 
 	// grid
 	std::shared_ptr<ARegularGrid> grid = ARegularGrid::build(n_cells + 1, 1);
