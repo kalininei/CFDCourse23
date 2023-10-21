@@ -2,6 +2,8 @@ SET (HEADERS
       common.hpp
       debug.hpp
       geom.hpp
+      tictoc.hpp
+      timedep_writer.hpp
 
       appr/fdm_approximator.hpp
       appr/fvm_approximator.hpp
@@ -42,7 +44,9 @@ SET (HEADERS
 
 SET (SRC
       debug.cpp
-
+      tictoc.cpp
+      timedep_writer.cpp
+      
       appr/fdm_approximator.cpp
       appr/fvm_approximator.cpp
       appr/spatial_approximator.cpp

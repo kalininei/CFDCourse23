@@ -25,6 +25,19 @@ if(NOT amgcl_POPULATED)
 endif()
 include_directories(${amgcl_SOURCE_DIR})
 
+# ------- ghc
+FetchContent_Declare(
+	ghc
+	GIT_REPOSITORY https://github.com/gulrak/filesystem
+	GIT_TAG v1.5.14
+)
+FetchContent_GetProperties(ghc)
+if(NOT ghc_POPULATED)
+	FetchContent_Populate(ghc)
+endif()
+include_directories(${ghc_SOURCE_DIR}/include)
+
+
 # ------ cfdlib
 include_directories(${CMAKE_SOURCE_DIR}/lib)
 set(CFDLIB_TARGET cfdlib)
