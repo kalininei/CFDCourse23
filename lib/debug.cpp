@@ -44,3 +44,10 @@ void dbg::print(const CsrStencil& mat, const std::vector<double>& vals){
 void dbg::print(const CsrMatrix& mat){
 	dbg::print(mat, mat.vals());
 }
+
+void dbg::print(size_t irow, const CsrStencil& mat, const std::vector<double>& val){
+	std::cout << "IROW=" << irow << std::endl;
+	for (int a=mat.addr()[irow]; a<mat.addr()[irow+1]; ++a){
+		std::cout << "[" << mat.cols()[a] << "] " << val[a] << std::endl;
+	}
+}

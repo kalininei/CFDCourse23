@@ -46,6 +46,7 @@ private:
 class CsrMatrix: public CsrStencil{
 public:
 	CsrMatrix(const CsrStencil& stencil): CsrStencil(stencil), _vals(stencil.n_nonzero(), 0.0){}
+	CsrMatrix(const CsrStencil& stencil, const std::vector<double>& v): CsrStencil(stencil), _vals(v){}
 	CsrMatrix(CsrStencil&& stencil): CsrStencil(std::move(stencil)), _vals(n_nonzero(), 0.0){}
 
 	std::vector<double>& vals() { return _vals; }

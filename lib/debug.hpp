@@ -7,6 +7,7 @@
 namespace dbg{
 
 void print(const CsrStencil& mat, const std::vector<double>& val);
+void print(size_t irow, const CsrStencil& mat, const std::vector<double>& val);
 void print(const CsrMatrix& mat);
 
 }
